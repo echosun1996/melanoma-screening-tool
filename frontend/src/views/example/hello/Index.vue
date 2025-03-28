@@ -1,10 +1,10 @@
 <template>
   <section id="hero">
     <h1 class="tagline">
-      <span class="accent">Electron-Egg</span>
+      <span class="accent">Skin Screening Tool</span>
     </h1>
     <p class="description">
-      A fast, desktop software development framework
+      The Skin Screening Tool Demo
     </p>
     <p class="actions">
       <a class="setup" href="https://www.kaka996.com/" target="_blank">Get Started</a>

@@ -18,7 +18,8 @@ module.exports = {
       directory: './',
       cmd: 'electron',
       args: ['.', '--env=local'],
-      watch: false,
+      watch: true,
+      delay: 1000,
     }
   },
 
@@ -33,8 +34,7 @@ module.exports = {
       args: ['run', 'build'],
     },
     electron: {
-      type: 'javascript',
-      bundleType: 'copy'
+      type: 'typescript',
     },
     win64: {
       cmd: 'electron-builder',
@@ -86,7 +86,7 @@ module.exports = {
 
   /**
    * 移动资源
-   * ee-bin move 
+   * ee-bin move
    */
   move: {
     frontend_dist: {
@@ -113,7 +113,7 @@ module.exports = {
       src: './python/dist',
       dest: './build/extraResources/py'
     },
-  },  
+  },
 
   /**
    * 预发布模式（prod）
@@ -127,7 +127,7 @@ module.exports = {
 
   /**
    * 加密
-   */  
+   */
   encrypt: {
     frontend: {
       type: 'none',
@@ -136,7 +136,7 @@ module.exports = {
       ],
       cleanFiles: ['./public/dist'],
       confusionOptions: {
-        compact: true,      
+        compact: true,
         stringArray: true,
         stringArrayEncoding: ['none'],
         stringArrayCallsTransform: true,
@@ -155,7 +155,7 @@ module.exports = {
         './public/electron/preload/bridge.js',
       ],
       confusionOptions: {
-        compact: true,      
+        compact: true,
         stringArray: true,
         stringArrayEncoding: ['rc4'],
         deadCodeInjection: false,
@@ -182,18 +182,18 @@ module.exports = {
       directory: './go',
       cmd: 'air',
       args: ['-c=config/.air.windows.toml' ],
-    },    
+    },
     // 单独调试，以基础方式启动 go
     go2: {
       directory: './go',
       cmd: 'go',
       args: ['run', './main.go', '--env=dev','--basedir=../', '--port=7073'],
-    },     
+    },
     python: {
       directory: './python',
       cmd: 'python',
       args: ['./main.py', '--port=7074'],
       stdio: "inherit", // ignore
     },
-  },  
+  },
 };
