@@ -1,7 +1,7 @@
 {
   "name": "melanomaScreeningTool",
-  "version": "0.0.1",
-  "description": "",
+  "version": "0.0.3",
+  "description": "MelanomaScreeningTool",
   "main": "public/electron/main.js",
   "scripts": {
     "dev": "ee-bin dev",
@@ -29,7 +29,8 @@
     "debug-dev": "cross-env DEBUG=ee-* ee-bin dev",
     "debug-encrypt": "ee-bin encrypt",
     "debug-electron": "cross-env DEBUG=ee-* ee-bin dev --serve=electron",
-    "debug-move": "ee-bin move --flag=frontend_dist"
+    "debug-move": "ee-bin move --flag=frontend_dist",
+    "final-mac": "npm run build-frontend && npm run build-electron && ee-bin encrypt && ee-bin build --cmds=mac"
   },
   "repository": "https://github.com/dromara/electron-egg.git",
   "keywords": [
@@ -50,11 +51,12 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@types/electron": "^1.4.38",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
-    "@types/electron": "^1.4.38",
     "ee-core": "^4.1.0",
     "electron-updater": "^6.3.8",
+    "icon-gen": "^4.0.0",
     "vue": "^3.5.13"
   }
 }

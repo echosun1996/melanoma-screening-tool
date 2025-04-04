@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig(() => {
+
   return {
     // 项目插件
     plugins: [
@@ -17,6 +18,10 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, 'src'),
       },
     },
+    assetsInclude: ["**/*.fbx"], // 让 Vite 识别 .fbx 作为静态资源
+    // optimizeDeps: {
+    //   exclude: ['ant-design-vue'], // 避免 Vite 预打包这个库
+    // },
     css: {
       preprocessorOptions: {
         less: {

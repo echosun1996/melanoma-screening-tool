@@ -673,13 +673,33 @@ export default {
       const ambientLight = new THREE.AmbientLight(0x404040, 2);
       sceneObj.add(ambientLight);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-      directionalLight.position.set(1, 1, 1);
-      sceneObj.add(directionalLight);
+      // Add top-down directional light
+      const topLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      topLight.position.set(0, 3, 0); // Position directly above
+      topLight.lookAt(0, 0, 0);
+      sceneObj.add(topLight);
 
+      // Add subtle fill light from front for better visibility
+      const frontFillLight = new THREE.DirectionalLight(0xffffff, 1);
+      frontFillLight.position.set(0, 0, 1);
+      sceneObj.add(frontFillLight);
+
+      // Add subtle back light for depth
+      const backLight = new THREE.DirectionalLight(0xffffff, 1);
+      backLight.position.set(0, 0, -1);
+      sceneObj.add(backLight);
+
+      // // Add fill light from front
+      // const frontLight = new THREE.DirectionalLight(0xffffff, 0.7);
+      // frontLight.position.set(0, 0.5, 2);
+      // sceneObj.add(frontLight);
+
+
+      // file:///Volumes/MelanomaScreeningTool%200.0.3-arm64/MelanomaScreeningTool.app/Contents/Resources/app.asar/public/dist/models/human_body.fbx
+      // file:///Volumes/MelanomaScreeningTool%200.0.3-arm64/MelanomaScreeningTool.app/Contents/Resources/app.asar/public/dist/assets/index-D6AblD9e.js
       // Load human model
       const loader = new FBXLoader();
-      loader.load('src/assets/human_body.fbx', (object) => {
+      loader.load('models/human_body.fbx', (object) => {
         // Adjust scale and position
         object.scale.set(0.007, 0.007, 0.007);
         object.position.set(0, -0.5, 0);
@@ -687,12 +707,32 @@ export default {
         // Apply default material
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
-            child.material = new THREE.MeshPhongMaterial({
-              color: 0xdddddd,
+            const material = new THREE.MeshStandardMaterial({
+              color: 0xeeeeee,
+              metalness: 0.1,
+              roughness: 0.8,
               transparent: true,
-              opacity: 0.9,
-              side: THREE.DoubleSide
+              opacity: 0.95,
+              side: THREE.DoubleSide,
             });
+            if (child.material && child.material.map) {
+              material.map = child.material.map;
+            }
+
+            if (child.material && child.material.normalMap) {
+              material.normalMap = child.material.normalMap;
+            }
+
+            child.material = material;
+            child.castShadow = true;
+            child.receiveShadow = true;
+
+            // child.material = new THREE.MeshPhongMaterial({
+            //   color: 0xdddddd,
+            //   transparent: true,
+            //   opacity: 0.9,
+            //   side: THREE.DoubleSide
+            // });
           }
         });
 
