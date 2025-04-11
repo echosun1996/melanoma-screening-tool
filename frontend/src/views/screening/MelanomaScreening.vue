@@ -57,10 +57,16 @@
               class="w-full p-2 border rounded"
               v-model="filters.bodyRegion"
           >
+            {'Head & Neck', 'Left Arm', 'Left Leg', 'Right Arm', 'Right Leg', 'Torso Back', 'Torso Front', 'Unknown'}
             <option value="all">All Regions</option>
-            <option value="Upper Back">Upper Back</option>
-            <option value="Lower Back">Lower Back</option>
-            <option value="Chest">Chest</option>
+            <option value="Head & Neck">Head & Neck</option>
+            <option value="Left Arm">Left Arm</option>
+            <option value="Left Leg">Left Leg</option>
+            <option value="Right Arm">Right Arm</option>
+            <option value="Right Leg">Right Leg</option>
+            <option value="Torso Back">Torso Back</option>
+            <option value="Torso Front">Torso Front</option>
+            <option value="Unknown">Unknown</option>
           </select>
         </div>
 
@@ -78,9 +84,11 @@
                 v-if="selectedLesion"
                 class="absolute bottom-2 left-2 bg-white p-2 rounded shadow-md text-xs"
             >
-              <p class="font-bold">Selected: {{ selectedLesion.location }}</p>
+              <p class="font-bold">Patient: {{ selectedLesion.patientFolderName }}</p>
+              <p class="font-bold">Scan Time: {{ selectedLesion.scanTime }}</p>
               <p class="text-red-600 font-bold">
-                Risk: {{ (selectedLesion.probability * 100).toFixed(1) }}%
+                <!--                Risk: {{ // (selectedLesion.probability * 100).toFixed(1) }}%-->
+                {{ selectedLesion.probability * 100 >= 10000 ? 'Waiting for Analysis' : 'Risk: '+(selectedLesion.probability * 100).toFixed(1) + '% Risk' }}
               </p>
             </div>
             <div class="absolute top-2 right-2 bg-white p-1 rounded-full shadow-md">
@@ -114,48 +122,31 @@
         </div>
 
         <div class="flex-1 overflow-auto p-4">
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid gap-3" :class="showRightPanel ? 'grid-cols-5' : 'grid-cols-6'">
             <div
                 v-for="lesion in visibleLesions"
                 :key="lesion.id"
-                class="p-4 rounded-lg border cursor-pointer transition-colors bg-gray-50 hover:shadow-lg"
+                class="p-2 rounded-lg border cursor-pointer transition-colors bg-gray-50 hover:shadow-lg"
                 :class="{ 'ring-2 ring-blue-500': selectedLesion?.id === lesion.id }"
                 @click="handleLesionClick(lesion)"
             >
-              <div class="flex space-x-4">
-                <div class="relative">
+              <div class="flex flex-col items-center">
+                <div class="w-full aspect-square overflow-hidden rounded">
                   <img
                       :src="lesion.image"
                       :alt="`Lesion ${lesion.id}`"
-                      class="object-cover rounded cursor-pointer w-32 h-32"
-                      @click.stop="handleLesionClick(lesion)"
+                      class="object-cover w-full h-full rounded cursor-pointer"
                   />
-                  <button
-                      class="absolute top-1 right-1 p-1 bg-white rounded-full shadow hover:bg-gray-100"
-                      @click.stop="enlargedImage = lesion.image"
-                  >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M15 15L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="2"/>
-                      <path d="M10 7V13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      <path d="M7 10H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                  </button>
                 </div>
-                <div class="flex-1">
-                  <div class="flex justify-between items-start mb-2">
+                <div class="w-full text-center mt-2">
                   <span
-                      class="px-2 py-1 rounded text-sm font-medium"
-                      :class="lesion.probability >= riskThreshold
+                      class="px-2 py-1 rounded text-xs font-medium"
+                      :class="lesion.probability >= riskThreshold && lesion.probability * 100 < 10000
                       ? 'bg-red-100 text-red-800'
                       : 'bg-gray-100 text-gray-800'"
                   >
-                     {{ (lesion.probability * 100).toFixed(1) }}% Risk
-                    </span>
-                  </div>
-                  <p class="text-sm text-gray-600">Location: {{ lesion.location }}</p>
-                  <p class="text-sm text-gray-600">Size: {{ lesion.dimensions }}</p>
-                  <p class="text-sm text-gray-600">Class: {{ lesion.skinClass }}</p>
+                    {{ lesion.probability * 100 >= 10000 ? 'Pending' : (lesion.probability * 100).toFixed(1) + '% Risk' }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -261,16 +252,24 @@
             <div class="bg-white p-4 rounded shadow mt-4">
               <h3 class="font-medium mb-2">Selection Criteria</h3>
               <div class="grid grid-cols-2 gap-2 text-sm">
-                <div>Major Axis:</div>
-                <div class="text-right">{{ selectedLesion.selectionCriteria?.majorAxisMM || 'N/A' }}</div>
-                <div>Delta LB Norm:</div>
-                <div class="text-right">{{ selectedLesion.selectionCriteria?.deltaLBnorm || 'N/A' }}</div>
-                <div>Boundary Score:</div>
-                <div class="text-right">{{ selectedLesion.selectionCriteria?.outOfBoundsFraction || 'N/A' }}</div>
-                <div>Lesion Confidence:</div>
-                <div class="text-right">{{ selectedLesion.selectionCriteria?.dnnLesionConfidence ? selectedLesion.selectionCriteria.dnnLesionConfidence + '%' : 'N/A' }}</div>
-                <div>Nevus Confidence:</div>
-                <div class="text-right">{{ selectedLesion.selectionCriteria?.neviConfidence ? selectedLesion.selectionCriteria.neviConfidence + '%' : 'N/A' }}</div>
+                <div>ID:</div>
+                <div class="text-right">{{ selectedLesion.uuid }}</div>
+                <div>Age:</div>
+                <div class="text-right">{{ selectedLesion.patientInfo.age }}</div>
+                <div>Gender:</div>
+                <div class="text-right">{{ selectedLesion.patientInfo.gender }}</div>
+                <div>Location:</div>
+                <div class="text-right">{{ selectedLesion.location }}</div>
+                <div>Longest Diameter(mm):</div>
+                <div class="text-right">{{ selectedLesion.majorAxisMM }} mm</div>
+                <div>Contrast:</div>
+                <div class="text-right">{{ selectedLesion.deltaLBnorm  }}</div>
+                <div>Fraction of tile out of bounds:</div>
+                <div class="text-right">{{ selectedLesion.out_of_bounds_fraction }}</div>
+                <div>Lesion Confidence(%):</div>
+                <div class="text-right">{{ selectedLesion.dnn_lesion_confidence}}%</div>
+                <div>Nevus Confidence(%):</div>
+                <div class="text-right">{{ selectedLesion.nevi_confidence }}%</div>
               </div>
             </div>
 
@@ -461,178 +460,6 @@ export default {
       initThreeJs();
     });
 
-    // Lifecycle hooks
-    // onMounted(() => {
-    //   // Initialize sample data
-    //   lesions.value = [
-    //     {
-    //       id: 1,
-    //       image: "src/assets/images/image1.png",
-    //       location: "Upper Back",
-    //       probability: 0.89,
-    //       skinClass: "Melanocytic",
-    //       recommendedAction: "Urgent Review",
-    //       dimensions: "4.8mm x 3.2mm",
-    //       asymmetry: 0.76,
-    //       border: 0.82,
-    //       color: 0.91,
-    //       bodyPosition: {
-    //         region: "upper_back",
-    //         x: 0,
-    //         y: 0.25,
-    //         z: -0.12
-    //       }
-    //     },
-        // {
-        //   id: 2,
-        //   image: "src/assets/images/image2.png",
-        //   location: "Upper Back",
-        //   probability: 0.72,
-        //   skinClass: "Melanocytic",
-        //   recommendedAction: "Review",
-        //   dimensions: "3.9mm x 3.1mm",
-        //   asymmetry: 0.65,
-        //   border: 0.71,
-        //   color: 0.68,
-        //   bodyPosition: {
-        //     region: "upper_back",
-        //     x: -0.05,
-        //     y: 0.2,
-        //     z: -0.12
-        //   }
-        // },
-        // {
-        //   id: 3,
-        //   image: "src/assets/images/image3.png",
-        //   location: "Lower Back",
-        //   probability: 0.91,
-        //   skinClass: "Melanocytic",
-        //   recommendedAction: "Urgent Biopsy",
-        //   dimensions: "5.2mm x 4.1mm",
-        //   asymmetry: 0.88,
-        //   border: 0.85,
-        //   color: 0.93,
-        //   bodyPosition: {
-        //     region: "lower_back",
-        //     x: 0.02,
-        //     y: 0,
-        //     z: -0.12
-        //   }
-        // },
-        // {
-        //   id: 4,
-        //   image: "src/assets/images/image4.png",
-        //   location: "Chest",
-        //   probability: 0.45,
-        //   skinClass: "Non-melanocytic",
-        //   recommendedAction: "Monitor",
-        //   dimensions: "3.1mm x 2.8mm",
-        //   asymmetry: 0.42,
-        //   border: 0.38,
-        //   color: 0.51,
-        //   bodyPosition: {
-        //     region: "chest",
-        //     x: -0.03,
-        //     y: 0.4,
-        //     z: 0.12
-        //   }
-        // },
-        // {
-        //   id: 5,
-        //   image: "src/assets/images/image5.png",
-        //   location: "Upper Back",
-        //   probability: 0.83,
-        //   skinClass: "Melanocytic",
-        //   recommendedAction: "Urgent Review",
-        //   dimensions: "4.5mm x 3.8mm",
-        //   asymmetry: 0.79,
-        //   border: 0.77,
-        //   color: 0.85,
-        //   bodyPosition: {
-        //     region: "upper_back",
-        //     x: 0.07,
-        //     y: 0.3,
-        //     z: -0.12
-        //   }
-        // },
-        // {
-        //   id: 6,
-        //   image: "src/assets/images/image6.png",
-        //   location: "Lower Back",
-        //   probability: 0.67,
-        //   skinClass: "Melanocytic",
-        //   recommendedAction: "Review",
-        //   dimensions: "3.7mm x 3.2mm",
-        //   asymmetry: 0.61,
-        //   border: 0.65,
-        //   color: 0.72,
-        //   bodyPosition: {
-        //     region: "lower_back",
-        //     x: -0.04,
-        //     y: -0.1,
-        //     z: -0.12
-        //   }
-        // },
-        // {
-        //   id: 7,
-        //   image: "src/assets/images/image7.png",
-        //   location: "Chest",
-        //   probability: 0.88,
-        //   skinClass: "Melanocytic",
-        //   recommendedAction: "Urgent Review",
-        //   dimensions: "4.9mm x 4.2mm",
-        //   asymmetry: 0.84,
-        //   border: 0.81,
-        //   color: 0.89,
-        //   bodyPosition: {
-        //     region: "chest",
-        //     x: 0.05,
-        //     y: 0.35,
-        //     z: 0.12
-        //   }
-        // },
-        // {
-        //   id: 8,
-        //   image: "src/assets/images/image8.png",
-        //   location: "Upper Back",
-        //   probability: 0.56,
-        //   skinClass: "Non-melanocytic",
-        //   recommendedAction: "Monitor",
-        //   dimensions: "3.4mm x 2.9mm",
-        //   asymmetry: 0.52,
-        //   border: 0.49,
-        //   color: 0.58,
-        //   bodyPosition: {
-        //     region: "upper_back",
-        //     x: 0.09,
-        //     y: 0.28,
-        //     z: -0.12
-        //   }
-        // },
-        // {
-        //   id: 9,
-        //   image: "src/assets/images/image9.png",
-        //   location: "Lower Back",
-        //   probability: 0.78,
-        //   skinClass: "Melanocytic",
-        //   recommendedAction: "Review",
-        //   dimensions: "4.1mm x 3.5mm",
-        //   asymmetry: 0.73,
-        //   border: 0.75,
-        //   color: 0.81,
-        //   bodyPosition: {
-        //     region: "lower_back",
-        //     x: 0.03,
-        //     y: -0.05,
-        //     z: -0.12
-        //   }
-        // }
-      // ];
-
-    //   // Initialize THREE.js
-    //   initThreeJs();
-    // });
-
     // THREE.js initialization
     const initThreeJs = () => {
       if (!canvasRef.value) return;
@@ -689,14 +516,6 @@ export default {
       backLight.position.set(0, 0, -1);
       sceneObj.add(backLight);
 
-      // // Add fill light from front
-      // const frontLight = new THREE.DirectionalLight(0xffffff, 0.7);
-      // frontLight.position.set(0, 0.5, 2);
-      // sceneObj.add(frontLight);
-
-
-      // file:///Volumes/MelanomaScreeningTool%200.0.3-arm64/MelanomaScreeningTool.app/Contents/Resources/app.asar/public/dist/models/human_body.fbx
-      // file:///Volumes/MelanomaScreeningTool%200.0.3-arm64/MelanomaScreeningTool.app/Contents/Resources/app.asar/public/dist/assets/index-D6AblD9e.js
       // Load human model
       const loader = new FBXLoader();
       loader.load('models/human_body.fbx', (object) => {
@@ -733,13 +552,6 @@ export default {
             // child.material = material;
             child.castShadow = true;
             child.receiveShadow = true;
-            //
-            // child.material = new THREE.MeshPhongMaterial({
-            //   color: 0xdddddd,
-            //   transparent: true,
-            //   opacity: 0.9,
-            //   side: THREE.DoubleSide
-            // });
           }
         });
 

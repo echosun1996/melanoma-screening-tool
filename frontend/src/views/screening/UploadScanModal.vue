@@ -1,4 +1,4 @@
-const fetchLesionDat<template>
+<template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white rounded-lg p-6 max-w-2xl w-full">
       <div class="flex justify-between items-center mb-4">
@@ -44,6 +44,13 @@ const fetchLesionDat<template>
               currentStep >= 4 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
             ]">4</div>
             <span class="text-sm">Filter Lesions</span>
+          </div>
+          <div class="text-center">
+            <div :class="[
+              'rounded-full h-8 w-8 flex items-center justify-center mx-auto mb-1',
+              currentStep >= 5 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+            ]">5</div>
+            <span class="text-sm">Patient Info</span>
           </div>
         </div>
       </div>
@@ -196,10 +203,21 @@ const fetchLesionDat<template>
         </div>
 
         <div class="mb-4">
-          <div class="text-sm font-medium mb-2">Filter Criteria:</div>
+          <div class="flex justify-between items-center mb-2">
+            <div class="text-sm font-medium">Filter Criteria:</div>
+            <div>
+              <button
+                  @click="resetToDefaultFilters"
+                  class="text-sm text-blue-600 hover:text-blue-800"
+              >
+                {{ 'Default'}}
+              </button>
+            </div>
+
+          </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs text-gray-700 mb-1">Major Axis (mm)</label>
+              <label class="block text-xs text-gray-700 mb-1">Longest Diameter(mm)</label>
               <div class="flex items-center">
                 <span class="mr-2">≥</span>
                 <input
@@ -212,7 +230,7 @@ const fetchLesionDat<template>
               </div>
             </div>
             <div>
-              <label class="block text-xs text-gray-700 mb-1">deltaLBnorm</label>
+              <label class="block text-xs text-gray-700 mb-1">Contrast</label>
               <div class="flex items-center">
                 <span class="mr-2">≥</span>
                 <input
@@ -225,11 +243,11 @@ const fetchLesionDat<template>
               </div>
             </div>
             <div>
-              <label class="block text-xs text-gray-700 mb-1">Boundary Score</label>
+              <label class="block text-xs text-gray-700 mb-1">Fraction of tile out of bounds</label>
               <div class="flex items-center">
                 <span class="mr-2">≤</span>
                 <input
-                    v-model="filters.outOfBoundsFraction"
+                    v-model="filters.out_of_bounds_fraction"
                     type="number"
                     step="0.01"
                     min="0"
@@ -243,7 +261,7 @@ const fetchLesionDat<template>
               <div class="flex items-center">
                 <span class="mr-2">≥</span>
                 <input
-                    v-model="filters.dnnLesionConfidence"
+                    v-model="filters.dnn_lesion_confidence"
                     type="number"
                     step="1"
                     min="0"
@@ -257,7 +275,7 @@ const fetchLesionDat<template>
               <div class="flex items-center">
                 <span class="mr-2">≥</span>
                 <input
-                    v-model="filters.neviConfidence"
+                    v-model="filters.nevi_confidence"
                     type="number"
                     step="1"
                     min="0"
@@ -322,10 +340,108 @@ const fetchLesionDat<template>
               <div class="mt-1 text-xs">
                 <div class="flex justify-between">
                   <span>Confidence:</span>
-                  <span>{{ (lesion.dnnLesionConfidence || 0).toFixed(1) }}%</span>
+                  <span>{{ (lesion.dnn_lesion_confidence || 0).toFixed(1) }}%</span>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Patient Information -->
+      <div v-if="currentStep === 5">
+        <div class="mb-2 flex items-center">
+          <button
+              @click="currentStep = 4"
+              class="text-blue-500 hover:text-blue-700 mr-2"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <span class="font-medium">Selected Lesions: {{ selectedLesions.length }}</span>
+        </div>
+
+        <div class="mb-6">
+          <div class="text-sm font-medium mb-3">Patient Information</div>
+
+          <div class="p-3 bg-blue-50 rounded-lg mb-4">
+            <div class="flex items-start">
+              <svg class="h-5 w-5 text-blue-500 mt-0.5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13 16H12V12H11M12 8H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <div class="text-sm text-blue-800">
+                <p>Please provide the patient's demographic information.</p>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm text-gray-700 mb-1">Patient Age</label>
+              <input
+                  v-model="patientInfo.age"
+                  type="number"
+                  min="0"
+                  max="120"
+                  class="w-full p-2 border rounded"
+                  placeholder="Enter patient age"
+              />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-700 mb-1">Gender</label>
+              <div class="flex space-x-4 mt-2">
+                <div class="flex items-center">
+                  <input
+                      id="gender-male"
+                      v-model="patientInfo.gender"
+                      type="radio"
+                      value="male"
+                      class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label for="gender-male" class="ml-2 text-sm text-gray-700">Male</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                      id="gender-female"
+                      v-model="patientInfo.gender"
+                      type="radio"
+                      value="female"
+                      class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label for="gender-female" class="ml-2 text-sm text-gray-700">Female</label>
+                </div>
+                <div class="flex items-center">
+                  <input
+                      id="gender-other"
+                      v-model="patientInfo.gender"
+                      type="radio"
+                      value="other"
+                      class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label for="gender-other" class="ml-2 text-sm text-gray-700">Other</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+<!--          <div class="mt-4">-->
+<!--            <label class="block text-sm text-gray-700 mb-1">Additional Notes</label>-->
+<!--            <textarea-->
+<!--                v-model="patientInfo.notes"-->
+<!--                class="w-full p-2 border rounded"-->
+<!--                rows="3"-->
+<!--                placeholder="Enter any additional information about the patient..."-->
+<!--            ></textarea>-->
+<!--          </div>-->
+        </div>
+
+
+        <div class="bg-gray-50 rounded-lg p-3">
+          <div class="text-sm font-medium mb-2">Summary</div>
+          <div class="text-sm text-gray-600">
+            <p>Patient: <span class="font-medium">{{ selectedPatientFolder }}</span></p>
+            <p>Scan Date: <span class="font-medium">{{ formatTimestamp(selectedScanFolder) }}</span></p>
+            <p>Selected Lesions: <span class="font-medium">{{ selectedLesions.length }}</span></p>
           </div>
         </div>
       </div>
@@ -341,7 +457,7 @@ const fetchLesionDat<template>
 
         <div>
           <button
-              v-if="currentStep < 4"
+              v-if="currentStep < 5"
               @click="nextStep"
               class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="!canProceed"
@@ -410,9 +526,16 @@ export default {
     const filters = reactive({
       majorAxisMM: 2.0,
       deltaLBnorm: 4.5,
-      outOfBoundsFraction: 0.25,
-      dnnLesionConfidence: 50.0,
-      neviConfidence: 80.0,
+      out_of_bounds_fraction: 0.25,
+      dnn_lesion_confidence: 50.0,
+      nevi_confidence: 80.0,
+    });
+
+    // Step 5: Patient information
+    const patientInfo = reactive({
+      age: null,
+      gender: 'male',
+      notes: ''
     });
 
     // Computed properties
@@ -423,17 +546,36 @@ export default {
         return selectedPatientFolder.value !== '';
       } else if (currentStep.value === 3) {
         return selectedScanFolder.value !== '';
+      } else if (currentStep.value === 4) {
+        return selectedLesions.value.length > 0;
       }
       return false;
     });
+
+    const resetToDefaultFilters = () => {
+      // Reset filters to their default values
+      filters.majorAxisMM = 2.0;
+      filters.deltaLBnorm = 4.5;
+      filters.out_of_bounds_fraction = 0.25;
+      filters.dnn_lesion_confidence = 50.0;
+      filters.nevi_confidence = 80.0;
+      setTimeout(() => {
+        selectAllFilteredLesions();
+      }, 50);
+    };
+
+    // Helper function to select all filtered lesions
+    const selectAllFilteredLesions = () => {
+      selectedLesions.value = Array.from({ length: filteredLesions.value.length }, (_, i) => i);
+    };
 
     const filteredLesions = computed(() => {
       return lesionData.value.filter(lesion =>
           lesion.majorAxisMM >= filters.majorAxisMM &&
           lesion.deltaLBnorm >= filters.deltaLBnorm &&
-          lesion.outOfBoundsFraction <= filters.outOfBoundsFraction &&
-          lesion.dnnLesionConfidence >= filters.dnnLesionConfidence &&
-          lesion.neviConfidence >= filters.neviConfidence
+          lesion.out_of_bounds_fraction <= filters.out_of_bounds_fraction &&
+          lesion.dnn_lesion_confidence >= filters.dnn_lesion_confidence &&
+          lesion.nevi_confidence >= filters.nevi_confidence
       );
     });
 
@@ -442,10 +584,21 @@ export default {
           selectedLesions.value.length === filteredLesions.value.length;
     });
 
-    // Watch for filter criteria changes
     watch(filters, () => {
-      // Reset selected lesions when filter criteria change
-      selectedLesions.value = [];
+      // When filter conditions change, default to selecting all filtered lesions
+      setTimeout(() => {
+        selectAllFilteredLesions();
+      }, 50);
+    }, { deep: true }); // deep: true ensures we monitor changes in nested objects
+
+    watch(() => currentStep.value, (newStep) => {
+      if (newStep === 4) {
+        // When entering Step 4, wait for the computed filteredLesions to update
+        // then select all lesions by default
+        setTimeout(() => {
+          selectAllFilteredLesions();
+        }, 100);
+      }
     });
 
     // Methods
@@ -587,14 +740,16 @@ export default {
         // Process lesion data
         if (jsonData && jsonData.root && jsonData.root.children) {
           lesionData.value = jsonData.root.children.map(child => ({
-            dnnLesionConfidence: child.dnnLesionConfidence || 0,
-            neviConfidence: child.neviConfidence || 0,
+            dnn_lesion_confidence: child.dnn_lesion_confidence || 0,
+            nevi_confidence: child.nevi_confidence || 0,
             majorAxisMM: child.majorAxisMM || 0,
             deltaLBnorm: child.deltaLBnorm || 0,
-            outOfBoundsFraction: child.outOfBoundsFraction || 0,
-            imageUrl: "data:image/png;base64,"+child.img64cc || ''
+            out_of_bounds_fraction: child.out_of_bounds_fraction || 0,
+            imageUrl: "data:image/png;base64,"+child.img64cc || '',
+            uuid:child.uuid||0,
+            location_simple:child.location_simple||'',
           }));
-
+          selectedLesions.value = Array.from({ length: filteredLesions.value.length }, (_, i) => i);
           return true; // Return true to indicate success
         } else {
           message.error('Invalid lesion data format in the JSON file');
@@ -619,6 +774,7 @@ export default {
         selectedLesions.value.push(index);
       }
     };
+
     const toggleSelectAll = () => {
       if (isAllSelected.value) {
         // Deselect all
@@ -652,6 +808,13 @@ export default {
             currentStep.value = 4;
           }
           // If fetchLesionData returns false, we stay on the current step
+        } else if (currentStep.value === 4) {
+          // Check if at least one lesion is selected before proceeding to patient info
+          if (selectedLesions.value.length > 0) {
+            currentStep.value = 5;
+          } else {
+            message.warning('Please select at least one lesion to continue');
+          }
         }
       } catch (error) {
         console.error('Error in nextStep:', error);
@@ -664,44 +827,53 @@ export default {
         const lesionsToImport = selectedLesions.value.map((index, arrayIndex) => {
           const lesion = filteredLesions.value[index];
 
-          // 默认病变置信度计算概率
+          // Default lesion confidence calculation
           const probability = 100;
 
-          // 创建新的病变对象
+          // Create new lesion object
           return {
-            id: arrayIndex + 1, // 重新从1开始编号
+
+            id: arrayIndex + 1, // Re-number starting from 1
+            uuid: lesion.uuid,
             image: lesion.imageUrl,
-            location: `${selectedPatientFolder.value}`,
-            location: `N/A`,
+            location: lesion.location_simple,
+            patientFolderName: `${selectedPatientFolder.value}`,
+            scanTime: `${formatTimestamp(selectedScanFolder.value)}`,
+
             probability: probability,
-            skinClass: lesion.neviConfidence >= 80 ? "Melanocytic" : "Non-melanocytic",
+            skinClass: lesion.nevi_confidence >= 80 ? "Melanocytic" : "Non-melanocytic",
             recommendedAction: probability >= 0.8 ? "Urgent Biopsy" :
                 probability >= 0.6 ? "Urgent Review" :
                     probability >= 0.5 ? "Review" : "Monitor",
             dimensions: `${lesion.majorAxisMM.toFixed(1)}mm x ${(lesion.majorAxisMM * 0.8).toFixed(1)}mm`,
-            asymmetry: probability * 0.9, // 模拟不对称性
-            border: probability * 0.85,   // 模拟边界不规则性
-            color: probability * 0.95,    // 模拟颜色变异
+            asymmetry: probability * 0.9, // Simulated asymmetry
+            border: probability * 0.85,   // Simulated border irregularity
+            color: probability * 0.95,    // Simulated color variation
             bodyPosition: {
-              region: "upper_back", // 默认区域
+              region: "upper_back", // Default region
               x: (Math.random() - 0.5) * 0.1,
               y: (Math.random() - 0.5) * 0.2,
               z: -0.12
             },
-            // 添加选择条件信息
-            selectionCriteria: {
-              majorAxisMM: lesion.majorAxisMM.toFixed(1),
-              deltaLBnorm: lesion.deltaLBnorm.toFixed(1),
-              outOfBoundsFraction: lesion.outOfBoundsFraction.toFixed(2),
-              dnnLesionConfidence: lesion.dnnLesionConfidence.toFixed(0),
-              neviConfidence: lesion.neviConfidence.toFixed(0)
+
+            majorAxisMM: lesion.majorAxisMM.toFixed(1),
+            deltaLBnorm:lesion.deltaLBnorm.toFixed(1),
+            out_of_bounds_fraction: lesion.out_of_bounds_fraction.toFixed(1),
+            dnn_lesion_confidence: lesion.dnn_lesion_confidence.toFixed(1),
+            nevi_confidence: lesion.nevi_confidence.toFixed(1),
+
+            // Add patient information
+            patientInfo: {
+              age: patientInfo.age || 'Not specified',
+              gender: patientInfo.gender,
+              notes: patientInfo.notes || ''
             }
           };
         });
 
-        // 发送所有选定的病变到父组件
+        // Send all selected lesions to parent component
         emit('submit', lesionsToImport);
-        emit('close'); // 关闭模态框
+        emit('close'); // Close the modal
       }
     };
 
@@ -733,6 +905,7 @@ export default {
       lesionData,
       selectedLesions,
       filters,
+      patientInfo,
       canProceed,
       filteredLesions,
       isAllSelected,
@@ -744,7 +917,8 @@ export default {
       toggleSelectAll,
       nextStep,
       importSelectedLesions,
-      formatTimestamp
+      formatTimestamp,
+      resetToDefaultFilters,
     };
   }
 };
