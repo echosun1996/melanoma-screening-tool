@@ -674,18 +674,18 @@ export default {
       sceneObj.add(ambientLight);
 
       // Add top-down directional light
-      const topLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      const topLight = new THREE.AmbientLight(0xffffff, 1.2);
       topLight.position.set(0, 3, 0); // Position directly above
       topLight.lookAt(0, 0, 0);
       sceneObj.add(topLight);
 
       // Add subtle fill light from front for better visibility
-      const frontFillLight = new THREE.DirectionalLight(0xffffff, 1);
+      const frontFillLight = new THREE.AmbientLight(0xffffff, 1);
       frontFillLight.position.set(0, 0, 1);
       sceneObj.add(frontFillLight);
 
       // Add subtle back light for depth
-      const backLight = new THREE.DirectionalLight(0xffffff, 1);
+      const backLight = new THREE.AmbientLight(0xffffff, 1);
       backLight.position.set(0, 0, -1);
       sceneObj.add(backLight);
 
@@ -706,14 +706,21 @@ export default {
 
         // Apply default material
         object.traverse((child) => {
+
+          if (child.isMesh) {
+            child.material.side = THREE.DoubleSide; // 可选：确保双面可见
+            child.material.transparent = true;      // 如果需要透明
+            child.material.needsUpdate = true;      // 强制刷新材质
+            child.metalness=0;
+          }
           if (child instanceof THREE.Mesh) {
             const material = new THREE.MeshStandardMaterial({
-              color: 0xeeeeee,
-              metalness: 0.1,
-              roughness: 0.8,
-              transparent: true,
-              opacity: 0.95,
-              side: THREE.DoubleSide,
+              color: 0xeeeeee,           // 更自然的人体肤色（白人中性色）
+              metalness: 0.0,            // 皮肤不是金属
+              roughness: 0.6,            // 稍微柔和一点的漫反射
+              transparent: true,         // 开启透明度控制（模拟 SSS 效果）
+              opacity: 0.98,             // 轻微透明，更接近皮肤真实感
+              side: THREE.DoubleSide     // 用于确保双面渲染（视场下不穿帮）
             });
             if (child.material && child.material.map) {
               material.map = child.material.map;
@@ -723,10 +730,10 @@ export default {
               material.normalMap = child.material.normalMap;
             }
 
-            child.material = material;
+            // child.material = material;
             child.castShadow = true;
             child.receiveShadow = true;
-
+            //
             // child.material = new THREE.MeshPhongMaterial({
             //   color: 0xdddddd,
             //   transparent: true,
