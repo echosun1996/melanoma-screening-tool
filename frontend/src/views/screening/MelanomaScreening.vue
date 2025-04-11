@@ -11,11 +11,11 @@
           >
             Open Scan
           </button>
-          <button class="px-4 py-2 bg-blue-100 text-blue-800 rounded">
-            Export Report
-          </button>
-          <button class="px-4 py-2 bg-blue-100 text-blue-800 rounded">
-            Previous Scan
+          <button
+              class="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+              @click="startAnalysis"
+          >
+            Start Analysis
           </button>
         </div>
       </div>
@@ -88,7 +88,7 @@
               <p class="font-bold">Scan Time: {{ selectedLesion.scanTime }}</p>
               <p class="text-red-600 font-bold">
                 <!--                Risk: {{ // (selectedLesion.probability * 100).toFixed(1) }}%-->
-                {{ selectedLesion.probability * 100 >= 10000 ? 'Waiting for Analysis' : 'Risk: '+(selectedLesion.probability * 100).toFixed(1) + '% Risk' }}
+                {{ selectedLesion.probability * 100 >= 10000 ? 'Waiting for Analysis' : 'Risk: '+(selectedLesion.probability * 100).toFixed(1) + '%' }}
               </p>
             </div>
             <div class="absolute top-2 right-2 bg-white p-1 rounded-full shadow-md">
@@ -145,7 +145,7 @@
                       ? 'bg-red-100 text-red-800'
                       : 'bg-gray-100 text-gray-800'"
                   >
-                    {{ lesion.probability * 100 >= 10000 ? 'Pending' : (lesion.probability * 100).toFixed(1) + '% Risk' }}
+                    {{ lesion.probability * 100 >= 10000 ? 'Pending' : (lesion.probability * 100).toFixed(1) + '%' }}
                   </span>
                 </div>
               </div>
@@ -329,6 +329,18 @@
         @close="isUploadModalOpen = false"
         @submit="handleNewLesion"
     />
+    <!-- Analysis Progress Modal -->
+    <AnalysisProgressModal
+        :is-open="isAnalysisModalOpen"
+        :overall-progress="analysisOverallProgress"
+        :status="analysisStatus"
+        :steps="analysisSteps"
+        :allow-close="allowCloseAnalysisModal"
+        :allow-cancel="!isAnalysisCompleted"
+        :is-completed="isAnalysisCompleted"
+        @close="isAnalysisModalOpen = false"
+        @cancel="cancelAnalysis"
+    />
   </div>
 </template>
 
@@ -339,12 +351,14 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import gsap from 'gsap';
 import UploadScanModal from './UploadScanModal.vue';
+import AnalysisProgressModal from './AnalysisProgressModal.vue';
 
 
 export default {
   name: 'MelanomaScreening',
   components: {
-    UploadScanModal
+    UploadScanModal,
+    AnalysisProgressModal
   },
   setup() {
     // State
@@ -373,6 +387,171 @@ export default {
     const highlightMeshes = ref({});
 
     const ITEMS_PER_PAGE = 50;
+
+
+    // New state for analysis progress
+    const isAnalysisModalOpen = ref(false);
+    const analysisOverallProgress = ref(0);
+    const analysisStatus = ref('Preparing analysis...');
+    const analysisSteps = ref([
+      {
+        name: 'Image Pre-processing',
+        progress: 0,
+        status: 'pending',
+        message: 'Waiting to start...'
+      },
+      {
+        name: 'Feature Extraction',
+        progress: 0,
+        status: 'pending',
+        message: 'Waiting to start...'
+      },
+      {
+        name: 'ABCD Analysis',
+        progress: 0,
+        status: 'pending',
+        message: 'Waiting to start...'
+      },
+      {
+        name: 'Risk Assessment',
+        progress: 0,
+        status: 'pending',
+        message: 'Waiting to start...'
+      }
+    ]);
+    const allowCloseAnalysisModal = ref(false);
+    const isAnalysisCompleted = ref(false);
+
+    // Simulated analysis function
+    const startAnalysis = () => {
+      // Only start if we have lesions to analyze
+      if (lesions.value.length === 0) {
+        alert('No lesions to analyze. Please upload a scan first.');
+        return;
+      }
+
+      // Reset analysis state
+      analysisOverallProgress.value = 0;
+      analysisStatus.value = 'Preparing analysis...';
+      analysisSteps.value.forEach(step => {
+        step.progress = 0;
+        step.status = 'pending';
+        step.message = 'Waiting to start...';
+      });
+      allowCloseAnalysisModal.value = false;
+      isAnalysisCompleted.value = false;
+
+      // Open the modal
+      isAnalysisModalOpen.value = true;
+
+      // Start the analysis simulation
+      simulateAnalysisProcess();
+    };
+
+    const simulateAnalysisProcess = () => {
+      // Step 1: Image Pre-processing
+      analysisStatus.value = 'Pre-processing images...';
+      const step1 = analysisSteps.value[0];
+      step1.status = 'in-progress';
+      step1.message = 'Enhancing image quality...';
+
+      simulateProgress(step1, 0, 100, 2000, () => {
+        step1.status = 'completed';
+        step1.message = 'Pre-processing complete';
+
+        // Step 2: Feature Extraction
+        analysisStatus.value = 'Extracting features...';
+        const step2 = analysisSteps.value[1];
+        step2.status = 'in-progress';
+        step2.message = 'Identifying lesion boundaries...';
+
+        simulateProgress(step2, 0, 100, 3000, () => {
+          step2.status = 'completed';
+          step2.message = 'Feature extraction complete';
+
+          // Step 3: ABCD Analysis
+          analysisStatus.value = 'Performing ABCD analysis...';
+          const step3 = analysisSteps.value[2];
+          step3.status = 'in-progress';
+          step3.message = 'Measuring asymmetry...';
+
+          simulateProgress(step3, 0, 100, 2500, () => {
+            step3.status = 'completed';
+            step3.message = 'ABCD analysis complete';
+
+            // Step 4: Risk Assessment
+            analysisStatus.value = 'Assessing risk factors...';
+            const step4 = analysisSteps.value[3];
+            step4.status = 'in-progress';
+            step4.message = 'Calculating risk probabilities...';
+
+            simulateProgress(step4, 0, 100, 2000, () => {
+              step4.status = 'completed';
+              step4.message = 'Risk assessment complete';
+
+              // Complete analysis
+              analysisStatus.value = 'Analysis complete!';
+              analysisOverallProgress.value = 100;
+              allowCloseAnalysisModal.value = true;
+              isAnalysisCompleted.value = true;
+
+              // Update lesion data with analysis results
+              updateLesionsWithAnalysisResults();
+            });
+          });
+        });
+      });
+    };
+
+    const simulateProgress = (step, startValue, endValue, duration, onComplete) => {
+      const startTime = Date.now();
+      const updateInterval = 100; // Update every 100ms
+
+      const updateProgress = () => {
+        const elapsedTime = Date.now() - startTime;
+        const progress = Math.min(100, startValue + ((endValue - startValue) * elapsedTime / duration));
+
+        step.progress = Math.round(progress);
+
+        // Update overall progress based on all steps
+        analysisOverallProgress.value = Math.round(
+            analysisSteps.value.reduce((sum, s) => sum + s.progress, 0) / analysisSteps.value.length
+        );
+
+        if (progress < 100) {
+          setTimeout(updateProgress, updateInterval);
+        } else if (onComplete) {
+          onComplete();
+        }
+      };
+
+      updateProgress();
+    };
+
+    const updateLesionsWithAnalysisResults = () => {
+      // Simulated update of lesion data with "analysis" results
+      lesions.value = lesions.value.map(lesion => {
+        // Only update lesions that don't already have analysis data
+        if (lesion.probability >= 100) {
+          const randomProbability = Math.random();
+
+          return {
+            ...lesion,
+            probability: randomProbability,
+            asymmetry: Math.random() * 0.9 + 0.1,
+            border: Math.random() * 0.9 + 0.1,
+            color: Math.random() * 0.9 + 0.1,
+            dimensions: `${(Math.random() * 6 + 2).toFixed(1)}x${(Math.random() * 6 + 2).toFixed(1)}`,
+          };
+        }
+        return lesion;
+      });
+    };
+
+    const cancelAnalysis = () => {
+      // In a real application, you would stop the analysis process here
+      isAnalysisModalOpen.value = false;
+    };
 
     // Computed properties
     const processedLesions = computed(() => {
@@ -433,7 +612,8 @@ export default {
         // Reset view to front
         gsap.to(model.value.rotation, {
           y: 0,
-          duration: 0.5
+          z:0,
+          duration: 0.3
         });
 
         if (camera.value && controls.value) {
@@ -442,7 +622,7 @@ export default {
             x: 0,
             y: 0.8,
             z: 3,
-            duration: 0.5,
+            duration: 0.3,
             onComplete: () => {
               camera.value.lookAt(0, 0, 0);
               controls.value.update();
@@ -516,6 +696,34 @@ export default {
       backLight.position.set(0, 0, -1);
       sceneObj.add(backLight);
 
+      // Define a mapping between location names and bone names
+      // const locationToBoneMap = {
+      //   'Head & Neck': ['mixamorig1Head', 'mixamorig1Neck', 'mixamorig1HeadTop_End'],
+      //   'Left Arm': ['mixamorig1LeftArm', 'mixamorig1LeftForeArm', 'mixamorig1LeftHand', 'mixamorig1LeftShoulder'],
+      //   'Right Arm': ['mixamorig1RightArm', 'mixamorig1RightForeArm', 'mixamorig1RightHand', 'mixamorig1RightShoulder'],
+      //   'Left Leg': ['mixamorig1LeftUpLeg', 'mixamorig1LeftLeg', 'mixamorig1LeftFoot', 'mixamorig1LeftToeBase'],
+      //   'Right Leg': ['mixamorig1RightUpLeg', 'mixamorig1RightLeg', 'mixamorig1RightFoot', 'mixamorig1RightToeBase'],
+      //   'Torso Front': ['mixamorig1Spine', 'mixamorig1Spine1', 'mixamorig1Spine2', 'mixamorig1Hips'],
+      //   'Torso Back': ['mixamorig1Spine', 'mixamorig1Spine1', 'mixamorig1Spine2', 'mixamorig1Hips'],
+      //   'Unknown': []
+      // };
+
+      const locationToBoneMap = {
+        'Head & Neck': ['mixamorig1Neck'],
+        'Left Arm': ['mixamorig1LeftForeArm'],
+        'Right Arm': ['mixamorig1RightForeArm'],
+        'Left Leg': ['mixamorig1LeftLeg'],
+        'Right Leg': ['mixamorig1RightLeg'],
+        'Torso Front': ['mixamorig1Spine'],
+        'Torso Back': ['mixamorig1Hips'],
+        'Unknown': []
+      };
+      // Store references to bones
+      const bonesMap = ref({});
+
+      // Store references to original materials to revert when needed
+      const originalMaterials = ref({});
+
       // Load human model
       const loader = new FBXLoader();
       loader.load('models/human_body.fbx', (object) => {
@@ -523,35 +731,49 @@ export default {
         object.scale.set(0.007, 0.007, 0.007);
         object.position.set(0, -0.5, 0);
 
-        // Apply default material
+        // Apply default material and store bone references
         object.traverse((child) => {
+          // Debug: Log all object names and types for analysis
+          // console.log(`Object found: ${child.name}, Type: ${child.type}, isBone: ${child.isBone ? 'Yes' : 'No'}`);
 
           if (child.isMesh) {
-            child.material.side = THREE.DoubleSide; // 可选：确保双面可见
-            child.material.transparent = true;      // 如果需要透明
-            child.material.needsUpdate = true;      // 强制刷新材质
-            child.metalness=0;
+            child.material.side = THREE.DoubleSide;
+            child.material.transparent = true;
+            child.material.needsUpdate = true;
+            child.metalness = 0;
+
+            // Store the original material for this mesh
+            originalMaterials.value[child.uuid] = child.material.clone();
+
+            // Store meshes by name for region highlighting
+            // This helps when bones aren't directly accessible
+            if (child.name.includes('Arm') || child.name.includes('arm') ||
+                child.name.includes('Hand') || child.name.includes('hand') ||
+                child.name.includes('Leg') || child.name.includes('leg') ||
+                child.name.includes('Foot') || child.name.includes('foot') ||
+                child.name.includes('Head') || child.name.includes('head') ||
+                child.name.includes('Torso') || child.name.includes('torso') ||
+                child.name.includes('Spine') || child.name.includes('spine')) {
+              // console.log(`Found relevant mesh: ${child.name}`);
+            }
           }
-          if (child instanceof THREE.Mesh) {
-            const material = new THREE.MeshStandardMaterial({
-              color: 0xeeeeee,           // 更自然的人体肤色（白人中性色）
-              metalness: 0.0,            // 皮肤不是金属
-              roughness: 0.6,            // 稍微柔和一点的漫反射
-              transparent: true,         // 开启透明度控制（模拟 SSS 效果）
-              opacity: 0.98,             // 轻微透明，更接近皮肤真实感
-              side: THREE.DoubleSide     // 用于确保双面渲染（视场下不穿帮）
-            });
-            if (child.material && child.material.map) {
-              material.map = child.material.map;
-            }
 
-            if (child.material && child.material.normalMap) {
-              material.normalMap = child.material.normalMap;
-            }
-
-            // child.material = material;
-            child.castShadow = true;
-            child.receiveShadow = true;
+          // Try different ways to detect bones in the model
+          // Some FBX models use isBone flag, others use different properties
+          if (child.isBone ||
+              child.type === 'Bone' ||
+              (child.name && (
+                  child.name.includes('mixamorig') ||
+                  child.name.includes('Bone') ||
+                  child.name.includes('bone') ||
+                  child.name.includes('Arm') ||
+                  child.name.includes('Leg') ||
+                  child.name.includes('Head') ||
+                  child.name.includes('Spine')
+              ))) {
+            const boneName = child.name;
+            bonesMap.value[boneName] = child;
+            // console.log(`Stored bone: ${boneName}`);
           }
         });
 
@@ -564,34 +786,305 @@ export default {
         controlsObj.update();
 
         // Create highlight markers for lesions
-        lesions.value.forEach((lesion) => {
-          const { x, y, z } = lesion.bodyPosition;
+        createLesionMarkers();
 
-          // Create sphere to represent lesion
-          const geometry = new THREE.SphereGeometry(0.03, 32, 32);
-          const material = new THREE.MeshBasicMaterial({
-            color: 0xff0000,
-            transparent: true,
-            opacity: 0.9,
-            visible: false
-          });
-
-          const mesh = new THREE.Mesh(geometry, material);
-          mesh.position.set(x, y, z);
-
-          // Add point light for glow effect
-          const pointLight = new THREE.PointLight(0xff0000, 1, 0.2);
-          pointLight.position.copy(mesh.position);
-          pointLight.visible = false;
-          mesh.userData.pointLight = pointLight;
-          sceneObj.add(pointLight);
-
-          sceneObj.add(mesh);
-
-          // Store reference to highlight mesh
-          highlightMeshes.value[lesion.id] = mesh;
-        });
       });
+
+      // Function to create lesion markers
+      const createLesionMarkers = () => {
+        lesions.value.forEach((lesion) => {
+          // Get bone positions based on location
+          const bonesToHighlight = locationToBoneMap[lesion.location] || [];
+
+          if (bonesToHighlight.length > 0) {
+            // Find the related bones and create a marker at each bone
+            bonesToHighlight.forEach(boneName => {
+              const bone = bonesMap.value[boneName];
+
+              if (bone) {
+                // Get the world position of the bone
+                const position = new THREE.Vector3();
+                bone.getWorldPosition(position);
+
+                // Create sphere to represent lesion
+                const geometry = new THREE.SphereGeometry(0.03, 32, 32);
+                const material = new THREE.MeshBasicMaterial({
+                  color: 0xff0000,
+                  transparent: true,
+                  opacity: 0.9,
+                  visible: false
+                });
+
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.copy(position);
+
+                // Store bone reference in mesh userData
+                mesh.userData.bone = bone;
+                mesh.userData.boneName = boneName;
+
+                // Add point light for glow effect
+                const pointLight = new THREE.PointLight(0xff0000, 1, 0.2);
+                pointLight.position.copy(mesh.position);
+                pointLight.visible = false;
+                mesh.userData.pointLight = pointLight;
+                sceneObj.add(pointLight);
+
+                sceneObj.add(mesh);
+
+                // Store reference to highlight mesh
+                if (!highlightMeshes.value[lesion.id]) {
+                  highlightMeshes.value[lesion.id] = [];
+                }
+                highlightMeshes.value[lesion.id].push(mesh);
+              }
+            });
+          } else {
+            // Fallback to the old positioning method if no bone mapping exists
+            const { x, y, z } = lesion.bodyPosition || { x: 0, y: 0, z: 0 };
+
+            // Create sphere to represent lesion
+            const geometry = new THREE.SphereGeometry(0.03, 32, 32);
+            const material = new THREE.MeshBasicMaterial({
+              color: 0xff0000,
+              transparent: true,
+              opacity: 0.9,
+              visible: false
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x, y, z);
+
+            // Add point light for glow effect
+            const pointLight = new THREE.PointLight(0xff0000, 1, 0.2);
+            pointLight.position.copy(mesh.position);
+            pointLight.visible = false;
+            mesh.userData.pointLight = pointLight;
+            sceneObj.add(pointLight);
+
+            sceneObj.add(mesh);
+
+            // Store reference to highlight mesh
+            if (!highlightMeshes.value[lesion.id]) {
+              highlightMeshes.value[lesion.id] = [];
+            }
+            highlightMeshes.value[lesion.id].push(mesh);
+          }
+        });
+      };
+
+      // Function to highlight the body region corresponding to a lesion
+      const highlightBodyRegion = (lesion) => {
+        // Reset all meshes to original materials first
+        model.value.traverse((child) => {
+          if (child.isMesh && originalMaterials.value[child.uuid]) {
+            child.material = originalMaterials.value[child.uuid].clone();
+            child.material.needsUpdate = true;
+          }
+        });
+
+        if (!lesion) return;
+
+        console.log(`Highlighting region for location: ${lesion.location}`);
+
+        // Get the bones related to this location
+        const bonesToHighlight = locationToBoneMap[lesion.location] || [];
+
+        // Find all meshes connected to the bones we want to highlight
+        // This is challenging because the connection between meshes and bones varies by model
+
+        // First approach: Try to find meshes by bone names
+        let highlightedAnyMesh = false;
+
+        if (bonesToHighlight.length > 0) {
+          // Create a set of bone names for faster lookup
+          const boneNameSet = new Set(bonesToHighlight);
+
+          // Traverse the model and look for meshes that might be associated with these bones
+          model.value.traverse((child) => {
+            if (child.isMesh) {
+              // Check name-based association
+              const meshName = child.name.toLowerCase();
+
+              // Different approaches to match meshes to bones
+              let shouldHighlight = false;
+
+              // 1. Direct check if any bone name appears in the mesh name
+              for (const boneName of bonesToHighlight) {
+                // Extract the descriptive part of the bone name (without mixamorig1 prefix)
+                const descriptivePart = boneName.replace('mixamorig1', '').toLowerCase();
+
+                if (meshName.includes(descriptivePart.toLowerCase())) {
+                  shouldHighlight = true;
+                  break;
+                }
+              }
+
+              // 2. Check for body part keywords based on location
+              if (!shouldHighlight) {
+                // Special handling for left/right parts
+                if (lesion.location.includes('Left') &&
+                    (meshName.includes('left') || meshName.includes('_l_') || meshName.includes('_l.'))) {
+                  shouldHighlight = true;
+                }
+                else if (lesion.location.includes('Right') &&
+                    (meshName.includes('right') || meshName.includes('_r_') || meshName.includes('_r.'))) {
+                  shouldHighlight = true;
+                }
+                else if (lesion.location.includes('Head') &&
+                    (meshName.includes('head') || meshName.includes('face') || meshName.includes('neck'))) {
+                  shouldHighlight = true;
+                }
+                else if (lesion.location.includes('Torso') &&
+                    (meshName.includes('torso') || meshName.includes('chest') ||
+                        meshName.includes('spine') || meshName.includes('body'))) {
+
+                  // For torso, differentiate between front and back if possible
+                  if (lesion.location === 'Torso Front' || lesion.location === 'Torso Back') {
+                    // Get mesh center position
+                    const bbox = new THREE.Box3().setFromObject(child);
+                    const center = new THREE.Vector3();
+                    bbox.getCenter(center);
+
+                    const isFront = lesion.location === 'Torso Front';
+                    // Use local Z coordinate to distinguish front from back
+                    // May need adjustment based on your model's orientation
+                    const meshZ = center.z;
+
+                    shouldHighlight = (isFront && meshZ > 0) || (!isFront && meshZ < 0);
+                  } else {
+                    shouldHighlight = true;
+                  }
+                }
+              }
+
+              // 3. Check if the mesh has a skeleton with any of our target bones
+              if (!shouldHighlight && child.skeleton) {
+                for (const bone of child.skeleton.bones) {
+                  if (boneNameSet.has(bone.name)) {
+                    shouldHighlight = true;
+                    break;
+                  }
+                }
+              }
+
+              // Apply highlight if needed
+              if (shouldHighlight) {
+                highlightedAnyMesh = true;
+                applyHighlightMaterial(child);
+              }
+            }
+          });
+        }
+        // If no specific meshes were found, fall back to a different method
+        if (!highlightedAnyMesh) {
+          console.log("No meshes found by bone association. Using generic approach.");
+
+          // Fallback: highlight mesh groups by name pattern
+          model.value.traverse((child) => {
+            if (child.isMesh) {
+              const lowerName = child.name.toLowerCase();
+
+              // Match by body part keywords
+              const locationKeywords = {
+                'Head & Neck': ['head', 'neck', 'face', 'skull'],
+                'Left Arm': ['left', 'arm'],
+                'Right Arm': ['right', 'arm'],
+                'Left Leg': ['left', 'leg', 'foot'],
+                'Right Leg': ['right', 'leg', 'foot'],
+                'Torso Front': ['torso', 'chest', 'front', 'belly'],
+                'Torso Back': ['back', 'spine']
+              }[lesion.location] || [];
+
+              // Check if any keyword matches
+              for (const keyword of locationKeywords) {
+                if (lowerName.includes(keyword)) {
+                  // For torso parts, differentiate front/back
+                  if ((lesion.location === 'Torso Front' || lesion.location === 'Torso Back') &&
+                      (keyword === 'torso' || keyword === 'chest')) {
+
+                    // Get position to determine front/back
+                    const bbox = new THREE.Box3().setFromObject(child);
+                    const center = new THREE.Vector3();
+                    bbox.getCenter(center);
+
+                    const isFront = lesion.location === 'Torso Front';
+                    // May need to adjust this logic based on your model orientation
+                    if ((isFront && center.z > 0) || (!isFront && center.z < 0)) {
+                      applyHighlightMaterial(child);
+                    }
+                  } else {
+                    applyHighlightMaterial(child);
+                  }
+                  break;
+                }
+              }
+            }
+          });
+        }
+
+        // If still no meshes highlighted, create spherical markers at bone positions
+        if (!highlightedAnyMesh) {
+          console.log("Falling back to bone position markers");
+
+          bonesToHighlight.forEach(boneName => {
+            const bone = bonesMap.value[boneName];
+
+            if (bone) {
+              // Get bone world position
+              const position = new THREE.Vector3();
+              bone.getWorldPosition(position);
+
+              // Create a larger sphere to highlight the region
+              const geometry = new THREE.SphereGeometry(0.08, 32, 32);
+              const material = new THREE.MeshBasicMaterial({
+                color: 0xff0000,
+                transparent: true,
+                opacity: 0.5
+              });
+
+              const marker = new THREE.Mesh(geometry, material);
+              marker.position.copy(position);
+
+              // Add to scene
+              scene.value.add(marker);
+
+              // Store for cleanup later
+              if (!highlightMeshes.value[lesion.id]) {
+                highlightMeshes.value[lesion.id] = [];
+              }
+              highlightMeshes.value[lesion.id].push(marker);
+            }
+          });
+        }
+      };
+      // Helper function to apply highlight material to a mesh
+      const applyHighlightMaterial = (mesh) => {
+        // Create a highlighted material
+        const highlightMaterial = new THREE.MeshStandardMaterial({
+          color: 0xffdddd,          // Light red tint
+          emissive: 0xff0000,       // Red glow
+          emissiveIntensity: 0.3,   // Subtle glow
+          metalness: 0.0,
+          roughness: 0.6,
+          transparent: true,
+          opacity: 0.9,
+          side: THREE.DoubleSide
+        });
+
+        // Copy maps from original material if they exist
+        if (originalMaterials.value[mesh.uuid]) {
+          const origMat = originalMaterials.value[mesh.uuid];
+          if (origMat.map) highlightMaterial.map = origMat.map;
+          if (origMat.normalMap) highlightMaterial.normalMap = origMat.normalMap;
+        }
+
+        // Apply the highlight material
+        mesh.material = highlightMaterial;
+        mesh.material.needsUpdate = true;
+      };
+
+      // Store the highlightBodyRegion function in a reactive ref for use in watchers
+      highlightBodyRegionFunc.value = highlightBodyRegion;
 
       // Animation loop
       const animate = () => {
@@ -607,14 +1100,23 @@ export default {
 
         // Handle pulse animation for selected lesion
         if (selectedLesion.value && highlightMeshes.value[selectedLesion.value.id]) {
-          const highlightMesh = highlightMeshes.value[selectedLesion.value.id];
-          const scale = 1 + 0.5 * Math.sin(Date.now() * 0.005);
-          highlightMesh.scale.set(scale, scale, scale);
+          const lesionMarkers = highlightMeshes.value[selectedLesion.value.id];
 
-          if (highlightMesh.material instanceof THREE.MeshBasicMaterial) {
-            const intensity = 0.7 + 0.3 * Math.sin(Date.now() * 0.01);
-            highlightMesh.material.color.setRGB(1, intensity * 0.3, intensity * 0.3);
-          }
+          // Pulse animation for all markers of the selected lesion
+          lesionMarkers.forEach(marker => {
+            const scale = 1 + 0.5 * Math.sin(Date.now() * 0.005);
+            marker.scale.set(scale, scale, scale);
+
+            if (marker.material instanceof THREE.MeshBasicMaterial) {
+              const intensity = 0.7 + 0.3 * Math.sin(Date.now() * 0.01);
+              marker.material.color.setRGB(1, intensity * 0.3, intensity * 0.3);
+            }
+
+            // Update point light intensity as well
+            if (marker.userData.pointLight) {
+              marker.userData.pointLight.intensity = 1 + 0.5 * Math.sin(Date.now() * 0.005);
+            }
+          });
         }
       };
 
@@ -638,72 +1140,106 @@ export default {
       // Cleanup function will be handled by Vue's onUnmounted hook
     };
 
-    // Watch for selected lesion changes
+// Add this ref to your setup function
+    const highlightBodyRegionFunc = ref(null);
+
+// Then update your watch() function for selectedLesion
     watch(selectedLesion, (newVal) => {
       // Hide all highlights
-      Object.values(highlightMeshes.value).forEach(mesh => {
-        mesh.visible = false;
-        if (mesh.userData.pointLight) {
-          mesh.userData.pointLight.visible = false;
-        }
+      Object.keys(highlightMeshes.value).forEach(lesionId => {
+        const markers = highlightMeshes.value[lesionId];
+        markers.forEach(mesh => {
+          mesh.visible = false;
+          if (mesh.userData.pointLight) {
+            mesh.userData.pointLight.visible = false;
+          }
+        });
       });
 
-      // Show selected lesion highlight
+      // Highlight the body region of the selected lesion
+      if (highlightBodyRegionFunc.value) {
+        highlightBodyRegionFunc.value(newVal);
+      }
+
+      // Show selected lesion highlights
       if (newVal && highlightMeshes.value[newVal.id]) {
-        const highlightMesh = highlightMeshes.value[newVal.id];
-        highlightMesh.visible = true;
+        const markers = highlightMeshes.value[newVal.id];
 
-        // Show point light
-        if (highlightMesh.userData.pointLight) {
-          highlightMesh.userData.pointLight.visible = true;
-        }
+        // Show all markers for this lesion
+        markers.forEach(marker => {
+          marker.visible = true;
 
-        // Auto-focus on selected lesion
-        if (model.value && camera.value && controls.value) {
-          // Get lesion position
-          const lesionPosition = new THREE.Vector3().copy(highlightMesh.position);
+          // Show point light
+          if (marker.userData.pointLight) {
+            marker.userData.pointLight.visible = true;
+          }
+        });
 
-          // Rotate model based on lesion position
-          if (newVal.bodyPosition.z < 0) {
-            // Show back
+        // If there's at least one marker, use it for camera positioning
+        if (markers.length > 0) {
+          const primaryMarker = markers[0];
+
+          // Auto-focus on selected lesion
+          if (model.value && camera.value && controls.value) {
+            // Get lesion position
+            const lesionPosition = new THREE.Vector3().copy(primaryMarker.position);
+
+            // Properly determine if we need front or back view based on the lesion location
+            let needsBackView = false;
+
+            if (newVal.location === 'Torso Back') {
+              needsBackView = true;
+            } else if (newVal.location === 'Torso Front') {
+              needsBackView = false;
+            } else if (newVal.bodyPosition && newVal.bodyPosition.z < 0) {
+              // If we have explicit position data showing it's on the back
+              needsBackView = false;
+            }
+
+            // Rotate model based on whether we need front or back view
+            const targetRotationY = needsBackView ? Math.PI : 0; // 180 degrees for back view
+
             gsap.to(model.value.rotation, {
-              y: 0,
-              duration: 1,
+              y: targetRotationY,
+              duration: 0.3,
               ease: "power2.inOut"
             });
-          } else {
-            // Show front
-            gsap.to(model.value.rotation, {
-              y: 0,
-              duration: 1,
-              ease: "power2.inOut"
+
+            const targetY = lesionPosition.y;
+            // Always position camera in front of the model (positive Z)
+            // The model rotation will determine if we see front or back
+            const targetZ = 2.5;
+
+            gsap.to(camera.value.position, {
+              x: lesionPosition.x * 0.5,
+              y: targetY,
+              z: targetZ,
+              duration: 0.3,
+              ease: "power2.inOut",
+              onUpdate: () => {
+                camera.value?.lookAt(
+                    lesionPosition.x,
+                    lesionPosition.y,
+                    0 // Look at the center of the model
+                );
+                controls.value?.update();
+              }
             });
           }
-
-          // Move camera to focus on lesion
-          const targetY = lesionPosition.y;
-          const targetZ = newVal.bodyPosition.z < 0 ? -2.5 : 2.5;
-
-          gsap.to(camera.value.position, {
-            x: lesionPosition.x * 0.5,
-            y: targetY,
-            z: targetZ,
-            duration: 1.5,
-            ease: "power2.inOut",
-            onUpdate: () => {
-              camera.value?.lookAt(
-                  lesionPosition.x,
-                  lesionPosition.y,
-                  lesionPosition.z
-              );
-              controls.value?.update();
-            }
-          });
         }
       }
     });
 
     return {
+      // New state and methods for analysis
+      isAnalysisModalOpen,
+      analysisOverallProgress,
+      analysisStatus,
+      analysisSteps,
+      allowCloseAnalysisModal,
+      isAnalysisCompleted,
+      startAnalysis,
+      cancelAnalysis,
       // State
       lesions,
       riskThresholdValue,

@@ -381,6 +381,7 @@
               <input
                   v-model="patientInfo.age"
                   type="number"
+                  value="25"
                   min="0"
                   max="120"
                   class="w-full p-2 border rounded"
