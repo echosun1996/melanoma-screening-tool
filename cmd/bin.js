@@ -79,8 +79,9 @@ module.exports = {
     },
     python: {
       directory: './python',
-      cmd: 'python',
-      args: ['./setup.py', 'build'],
+      cmd: 'conda',
+      args: ['run', '-n', 'ScreenToolPC', 'python', './setup.py', 'build'],
+      // args: ['./setup.py', 'build'],
     },
   },
 

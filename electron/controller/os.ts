@@ -146,6 +146,7 @@ class OsController {
       return Promise.resolve(fileInfos);
     } catch (err) {
       logger.error('Error reading directory:', err);
+      // @ts-ignore
       return Promise.resolve({ error: `Failed to read directory: ${err.message}` });
     }
   }

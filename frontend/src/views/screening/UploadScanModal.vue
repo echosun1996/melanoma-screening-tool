@@ -510,7 +510,8 @@ export default {
     const isLoading = ref(false);
 
     // Step 1: Base path selection
-    const basePath = ref('\\\\NAHWB360CAPT01\\AHWB360CAPT01-DermaGraphix-IMG\\');
+    // const basePath = ref('\\\\NAHWB360CAPT01\\AHWB360CAPT01-DermaGraphix-IMG\\');
+    const basePath = ref('/Users/echosun/TBP vectra cases');
 
     // Step 2: Patient folder selection
     const searchQuery = ref('');
@@ -534,7 +535,7 @@ export default {
 
     // Step 5: Patient information
     const patientInfo = reactive({
-      age: null,
+      age: 25,
       gender: 'male',
       notes: ''
     });
@@ -746,9 +747,43 @@ export default {
             majorAxisMM: child.majorAxisMM || 0,
             deltaLBnorm: child.deltaLBnorm || 0,
             out_of_bounds_fraction: child.out_of_bounds_fraction || 0,
-            imageUrl: "data:image/png;base64,"+child.img64cc || '',
-            uuid:child.uuid||0,
-            location_simple:child.location_simple||'',
+            imageUrl: "data:image/png;base64," + (child.img64cc || ''),
+            uuid: child.uuid || 0,
+            location_simple: child.location_simple || '',
+
+            // ML
+            age: child.age || 0,
+            gender: child.gender || '',
+
+            A: child.A || 0,
+            Aext: child.Aext || 0,
+            B: child.B || 0,
+            Bext: child.Bext || 0,
+            C: child.C || 0,
+            Cext: child.Cext || 0,
+            H: child.H || 0,
+            Hext: child.Hext || 0,
+            L: child.L || 0,
+            Lext: child.Lext || 0,
+
+            areaMM2: child.areaMM2 || 0,
+            area_perim_ratio: child.area_perim_ratio || 0,
+            color_std_mean: child.color_std_mean || 0,
+            deltaA: child.deltaA || 0,
+            deltaB: child.deltaB || 0,
+            deltaL: child.deltaL || 0,
+            deltaLB: child.deltaLB || 0,
+
+            eccentricity: child.eccentricity || 0,
+            minorAxisMM: child.minorAxisMM || 0,
+            norm_border: child.norm_border || 0,
+            norm_color: child.norm_color || 0,
+            perimeterMM: child.perimeterMM || 0,
+            radial_color_std_max: child.radial_color_std_max || 0,
+            stdL: child.stdL || 0,
+            stdLExt: child.stdLExt || 0,
+            symm_2axis: child.symm_2axis || 0,
+            symm_2axis_angle: child.symm_2axis_angle || 0
           }));
           selectedLesions.value = Array.from({ length: filteredLesions.value.length }, (_, i) => i);
           return true; // Return true to indicate success
@@ -836,7 +871,7 @@ export default {
 
             id: arrayIndex + 1, // Re-number starting from 1
             uuid: lesion.uuid,
-            image: lesion.imageUrl,
+            image: lesion.imageUrl, // ML input
             location: lesion.location_simple,
             patientFolderName: `${selectedPatientFolder.value}`,
             scanTime: `${formatTimestamp(selectedScanFolder.value)}`,
@@ -846,10 +881,12 @@ export default {
             recommendedAction: probability >= 0.8 ? "Urgent Biopsy" :
                 probability >= 0.6 ? "Urgent Review" :
                     probability >= 0.5 ? "Review" : "Monitor",
-            dimensions: `${lesion.majorAxisMM.toFixed(1)}mm x ${(lesion.majorAxisMM * 0.8).toFixed(1)}mm`,
-            asymmetry: probability * 0.9, // Simulated asymmetry
-            border: probability * 0.85,   // Simulated border irregularity
-            color: probability * 0.95,    // Simulated color variation
+            // dimensions: `${lesion.majorAxisMM.toFixed(1)}mm x ${(lesion.majorAxisMM * 0.8).toFixed(1)}mm`,
+            dimensions:-1,
+            // dimensions: `-1`,
+            asymmetry: -1, // Simulated asymmetry
+            border: -1,   // Simulated border irregularity
+            color: -1,    // Simulated color variation
             bodyPosition: {
               region: "upper_back", // Default region
               x: (Math.random() - 0.5) * 0.1,
@@ -857,16 +894,49 @@ export default {
               z: -0.12
             },
 
-            majorAxisMM: lesion.majorAxisMM.toFixed(1),
-            deltaLBnorm:lesion.deltaLBnorm.toFixed(1),
+            A: lesion.A,// ML input
+            Aext: lesion.Aext,// ML input
+            B: lesion.B,// ML input
+            Bext: lesion.Bext,// ML input
+            C: lesion.C,// ML input
+            Cext: lesion.Cext,// ML input
+            H: lesion.H,// ML input
+            Hext: lesion.Hext,// ML input
+            L: lesion.L,// ML input
+            Lext: lesion.Lext,// ML input
+            areaMM2: lesion.areaMM2,// ML input
+            area_perim_ratio: lesion.area_perim_ratio,// ML input
+            color_std_mean: lesion.color_std_mean,// ML input
+            deltaA: lesion.deltaA,// ML input
+            deltaB: lesion.deltaB,// ML input
+            deltaL: lesion.deltaL,// ML input
+            deltaLB: lesion.deltaLB, // ML input
+            deltaLBnorm: lesion.deltaLBnorm, // ML input
+            dnn_lesion_confidence: lesion.dnn_lesion_confidence, // ML input
+            eccentricity: lesion.eccentricity, // ML input
+            location_simple: lesion.location_simple, // ML input
+            majorAxisMM: lesion.majorAxisMM, // ML input
+            minorAxisMM: lesion.minorAxisMM, // ML input
+            nevi_confidence: lesion.nevi_confidence, // ML input
+            norm_border: lesion.norm_border, // ML input
+            norm_color: lesion.norm_color, // ML input
+            perimeterMM: lesion.perimeterMM, // ML input
+            radial_color_std_max: lesion.radial_color_std_max, // ML input
+            stdL: lesion.stdL, // ML input
+            stdLExt: lesion.stdLExt, // ML input
+            symm_2axis: lesion.symm_2axis, // ML input
+            symm_2axis_angle: lesion.symm_2axis_angle, // ML input
+
+            // majorAxisMM: lesion.majorAxisMM.toFixed(1),
+            // deltaLBnorm:lesion.deltaLBnorm.toFixed(1),
             out_of_bounds_fraction: lesion.out_of_bounds_fraction.toFixed(1),
-            dnn_lesion_confidence: lesion.dnn_lesion_confidence.toFixed(1),
-            nevi_confidence: lesion.nevi_confidence.toFixed(1),
+            // dnn_lesion_confidence: lesion.dnn_lesion_confidence.toFixed(1),
+            // nevi_confidence: lesion.nevi_confidence.toFixed(1),
 
             // Add patient information
             patientInfo: {
-              age: patientInfo.age || 'Not specified',
-              gender: patientInfo.gender,
+              age: patientInfo.age || 'Not specified', // ML input
+              gender: patientInfo.gender, // ML input
               notes: patientInfo.notes || ''
             }
           };

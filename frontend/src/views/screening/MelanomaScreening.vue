@@ -168,13 +168,13 @@
               <h3 class="font-medium mb-2">ABCD Analysis</h3>
               <div class="grid grid-cols-2 gap-2 text-sm">
                 <div>Asymmetry:</div>
-                <div class="text-right">{{ selectedLesion.asymmetry !== undefined ? (selectedLesion.asymmetry * 100).toFixed(1) + '%' : 'N/A' }}</div>
+                <div class="text-right">{{ selectedLesion.asymmetry !== -1 ? (selectedLesion.asymmetry * 100).toFixed(1) + '' : 'N/A' }}</div>
                 <div>Border:</div>
-                <div class="text-right">{{ selectedLesion.border !== undefined ? (selectedLesion.border * 100).toFixed(1) + '%' : 'N/A' }}</div>
+                <div class="text-right">{{ selectedLesion.border !== -1 ? (selectedLesion.border * 100).toFixed(1) + '' : 'N/A' }}</div>
                 <div>Color Variation:</div>
-                <div class="text-right">{{ selectedLesion.color !== undefined ? (selectedLesion.color * 100).toFixed(1) + '%' : 'N/A' }}</div>
+                <div class="text-right">{{ selectedLesion.color !== -1 ? (selectedLesion.color * 100).toFixed(1) + '' : 'N/A' }}</div>
                 <div>Dimensions:</div>
-                <div class="text-right">{{ selectedLesion.dimensions || 'N/A' }}</div>
+                <div class="text-right">{{ selectedLesion.dimensions !== -1? (selectedLesion.dimensions * 100).toFixed(1) + '' : 'N/A'}}</div>
               </div>
             </div>
 
@@ -241,7 +241,7 @@
                     <li v-if="selectedLesion.color > 0.7">
                       Concerning color variations
                     </li>
-                    <li v-if="parseFloat(selectedLesion.dimensions) > 4">
+                    <li v-if="selectedLesion.dimensions > 4">
                       Large diameter/size
                     </li>
                   </ul>
@@ -253,23 +253,109 @@
               <h3 class="font-medium mb-2">Selection Criteria</h3>
               <div class="grid grid-cols-2 gap-2 text-sm">
                 <div>ID:</div>
-                <div class="text-right">{{ selectedLesion.uuid }}</div>
+                <div class="text-right">{{ selectedLesion.uuid || 'N/A' }}</div>
+
                 <div>Age:</div>
-                <div class="text-right">{{ selectedLesion.patientInfo.age }}</div>
+                <div class="text-right">{{ selectedLesion.patientInfo.age != null ? selectedLesion.patientInfo.age : 'N/A' }}</div>
+
                 <div>Gender:</div>
-                <div class="text-right">{{ selectedLesion.patientInfo.gender }}</div>
+                <div class="text-right">{{ selectedLesion.patientInfo.gender || 'N/A' }}</div>
+
                 <div>Location:</div>
-                <div class="text-right">{{ selectedLesion.location }}</div>
-                <div>Longest Diameter(mm):</div>
-                <div class="text-right">{{ selectedLesion.majorAxisMM }} mm</div>
-                <div>Contrast:</div>
-                <div class="text-right">{{ selectedLesion.deltaLBnorm  }}</div>
-                <div>Fraction of tile out of bounds:</div>
-                <div class="text-right">{{ selectedLesion.out_of_bounds_fraction }}</div>
-                <div>Lesion Confidence(%):</div>
-                <div class="text-right">{{ selectedLesion.dnn_lesion_confidence}}%</div>
-                <div>Nevus Confidence(%):</div>
-                <div class="text-right">{{ selectedLesion.nevi_confidence }}%</div>
+                <div class="text-right">{{ selectedLesion.location || 'N/A' }}</div>
+
+                <div>A:</div>
+                <div class="text-right">{{ selectedLesion.A != null ? selectedLesion.A.toFixed(2) : 'N/A' }}</div>
+
+                <div>Aext:</div>
+                <div class="text-right">{{ selectedLesion.Aext != null ? selectedLesion.Aext.toFixed(2) : 'N/A' }}</div>
+
+                <div>B:</div>
+                <div class="text-right">{{ selectedLesion.B != null ? selectedLesion.B.toFixed(2) : 'N/A' }}</div>
+
+                <div>Bext:</div>
+                <div class="text-right">{{ selectedLesion.Bext != null ? selectedLesion.Bext.toFixed(2) : 'N/A' }}</div>
+
+                <div>C:</div>
+                <div class="text-right">{{ selectedLesion.C != null ? selectedLesion.C.toFixed(2) : 'N/A' }}</div>
+
+                <div>Cext:</div>
+                <div class="text-right">{{ selectedLesion.Cext != null ? selectedLesion.Cext.toFixed(2) : 'N/A' }}</div>
+
+                <div>H:</div>
+                <div class="text-right">{{ selectedLesion.H != null ? selectedLesion.H.toFixed(2) : 'N/A' }}</div>
+
+                <div>Hext:</div>
+                <div class="text-right">{{ selectedLesion.Hext != null ? selectedLesion.Hext.toFixed(2) : 'N/A' }}</div>
+
+                <div>L:</div>
+                <div class="text-right">{{ selectedLesion.L != null ? selectedLesion.L.toFixed(2) : 'N/A' }}</div>
+
+                <div>Lext:</div>
+                <div class="text-right">{{ selectedLesion.Lext != null ? selectedLesion.Lext.toFixed(2) : 'N/A' }}</div>
+
+                <div>Area (mm²):</div>
+                <div class="text-right">{{ selectedLesion.areaMM2 != null ? selectedLesion.areaMM2.toFixed(2) : 'N/A' }}</div>
+
+                <div>Area/Perimeter Ratio:</div>
+                <div class="text-right">{{ selectedLesion.area_perim_ratio != null ? selectedLesion.area_perim_ratio.toFixed(2) : 'N/A' }}</div>
+
+                <div>Colour Std Mean:</div>
+                <div class="text-right">{{ selectedLesion.color_std_mean != null ? selectedLesion.color_std_mean.toFixed(2) : 'N/A' }}</div>
+
+                <div>Delta A:</div>
+                <div class="text-right">{{ selectedLesion.deltaA != null ? selectedLesion.deltaA.toFixed(2) : 'N/A' }}</div>
+
+                <div>Delta B:</div>
+                <div class="text-right">{{ selectedLesion.deltaB != null ? selectedLesion.deltaB.toFixed(2) : 'N/A' }}</div>
+
+                <div>Delta L:</div>
+                <div class="text-right">{{ selectedLesion.deltaL != null ? selectedLesion.deltaL.toFixed(2) : 'N/A' }}</div>
+
+                <div>Delta LB:</div>
+                <div class="text-right">{{ selectedLesion.deltaLB != null ? selectedLesion.deltaLB.toFixed(2) : 'N/A' }}</div>
+
+                <div>Delta LB Norm:</div>
+                <div class="text-right">{{ selectedLesion.deltaLBnorm != null ? selectedLesion.deltaLBnorm.toFixed(2) : 'N/A' }}</div>
+
+                <div>DNN Lesion Confidence (%):</div>
+                <div class="text-right">{{ selectedLesion.dnn_lesion_confidence != null ? selectedLesion.dnn_lesion_confidence.toFixed(2) + '%' : 'N/A' }}</div>
+
+                <div>Nevi Confidence (%):</div>
+                <div class="text-right">{{ selectedLesion.nevi_confidence != null ? selectedLesion.nevi_confidence.toFixed(2) + '%' : 'N/A' }}</div>
+
+                <div>Eccentricity:</div>
+                <div class="text-right">{{ selectedLesion.eccentricity != null ? selectedLesion.eccentricity.toFixed(2) : 'N/A' }}</div>
+
+                <div>Major Axis (mm):</div>
+                <div class="text-right">{{ selectedLesion.majorAxisMM != null ? selectedLesion.majorAxisMM.toFixed(2) : 'N/A' }}</div>
+
+                <div>Minor Axis (mm):</div>
+                <div class="text-right">{{ selectedLesion.minorAxisMM != null ? selectedLesion.minorAxisMM.toFixed(2) : 'N/A' }}</div>
+
+                <div>Perimeter (mm):</div>
+                <div class="text-right">{{ selectedLesion.perimeterMM != null ? selectedLesion.perimeterMM.toFixed(2) : 'N/A' }}</div>
+
+                <div>Normalised Border:</div>
+                <div class="text-right">{{ selectedLesion.norm_border != null ? selectedLesion.norm_border.toFixed(2) : 'N/A' }}</div>
+
+                <div>Normalised Colour:</div>
+                <div class="text-right">{{ selectedLesion.norm_color != null ? selectedLesion.norm_color.toFixed(2) : 'N/A' }}</div>
+
+                <div>Radial Colour Std Max:</div>
+                <div class="text-right">{{ selectedLesion.radial_color_std_max != null ? selectedLesion.radial_color_std_max.toFixed(2) : 'N/A' }}</div>
+
+                <div>Std L:</div>
+                <div class="text-right">{{ selectedLesion.stdL != null ? selectedLesion.stdL.toFixed(2) : 'N/A' }}</div>
+
+                <div>Std L Ext:</div>
+                <div class="text-right">{{ selectedLesion.stdLExt != null ? selectedLesion.stdLExt.toFixed(2) : 'N/A' }}</div>
+
+                <div>Symmetry (2 Axes):</div>
+                <div class="text-right">{{ selectedLesion.symm_2axis != null ? selectedLesion.symm_2axis.toFixed(2) : 'N/A' }}</div>
+
+                <div>Symmetry Angle (°):</div>
+                <div class="text-right">{{ selectedLesion.symm_2axis_angle != null ? selectedLesion.symm_2axis_angle.toFixed(2) : 'N/A' }}</div>
               </div>
             </div>
 
@@ -345,6 +431,8 @@
 </template>
 
 <script>
+import { ipcApiRoute } from '@/api';
+import { ipc } from '@/utils/ipcRenderer';
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -352,6 +440,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import gsap from 'gsap';
 import UploadScanModal from './UploadScanModal.vue';
 import AnalysisProgressModal from './AnalysisProgressModal.vue';
+
 
 
 export default {
@@ -448,61 +537,14 @@ export default {
       simulateAnalysisProcess();
     };
 
-    const simulateAnalysisProcess = () => {
-      // Step 1: Image Pre-processing
-      analysisStatus.value = 'Pre-processing images...';
-      const step1 = analysisSteps.value[0];
-      step1.status = 'in-progress';
-      step1.message = 'Enhancing image quality...';
-
-      simulateProgress(step1, 0, 100, 2000, () => {
-        step1.status = 'completed';
-        step1.message = 'Pre-processing complete';
-
-        // Step 2: Feature Extraction
-        analysisStatus.value = 'Extracting features...';
-        const step2 = analysisSteps.value[1];
-        step2.status = 'in-progress';
-        step2.message = 'Identifying lesion boundaries...';
-
-        simulateProgress(step2, 0, 100, 3000, () => {
-          step2.status = 'completed';
-          step2.message = 'Feature extraction complete';
-
-          // Step 3: ABCD Analysis
-          analysisStatus.value = 'Performing ABCD analysis...';
-          const step3 = analysisSteps.value[2];
-          step3.status = 'in-progress';
-          step3.message = 'Measuring asymmetry...';
-
-          simulateProgress(step3, 0, 100, 2500, () => {
-            step3.status = 'completed';
-            step3.message = 'ABCD analysis complete';
-
-            // Step 4: Risk Assessment
-            analysisStatus.value = 'Assessing risk factors...';
-            const step4 = analysisSteps.value[3];
-            step4.status = 'in-progress';
-            step4.message = 'Calculating risk probabilities...';
-
-            simulateProgress(step4, 0, 100, 2000, () => {
-              step4.status = 'completed';
-              step4.message = 'Risk assessment complete';
-
-              // Complete analysis
-              analysisStatus.value = 'Analysis complete!';
-              analysisOverallProgress.value = 100;
-              allowCloseAnalysisModal.value = true;
-              isAnalysisCompleted.value = true;
-
-              // Update lesion data with analysis results
-              updateLesionsWithAnalysisResults();
-            });
-          });
-        });
-      });
-    };
-
+    /**
+     * Simulates progress for a step over time
+     * @param {Object} step - The step object to update progress for
+     * @param {number} startValue - Starting progress value
+     * @param {number} endValue - Target progress value
+     * @param {number} duration - Duration in milliseconds
+     * @param {Function|null} onComplete - Optional callback when progress reaches 100%
+     */
     const simulateProgress = (step, startValue, endValue, duration, onComplete) => {
       const startTime = Date.now();
       const updateInterval = 100; // Update every 100ms
@@ -518,7 +560,7 @@ export default {
             analysisSteps.value.reduce((sum, s) => sum + s.progress, 0) / analysisSteps.value.length
         );
 
-        if (progress < 100) {
+        if (progress < endValue) {
           setTimeout(updateProgress, updateInterval);
         } else if (onComplete) {
           onComplete();
@@ -528,20 +570,123 @@ export default {
       updateProgress();
     };
 
-    const updateLesionsWithAnalysisResults = () => {
-      // Simulated update of lesion data with "analysis" results
-      lesions.value = lesions.value.map(lesion => {
-        // Only update lesions that don't already have analysis data
-        if (lesion.probability >= 100) {
-          const randomProbability = Math.random();
+    const simulateAnalysisProcess = async () => {
+      try {
+        // Step 1: Image Pre-processing
+        analysisStatus.value = 'Pre-processing images...';
+        const step1 = analysisSteps.value[0];
+        step1.status = 'in-progress';
+        step1.message = 'Enhancing image quality...';
 
+        // Update first step progress to show activity
+        simulateProgress(step1, 0, 50, 1000, null);
+
+        // Prepare data to send to Python backend
+        // Prepare data to send to Python backend
+        const lesionData = lesions.value.map(lesion => {
+          // Create a simplified object with only the data we need
+          return {
+            id: lesion.id,
+            // Make sure image is a base64 string and not too large
+            // If it's already a base64 string, use it directly
+            // If it's a URL or something else, you might need to handle it differently
+            image: typeof lesion.image === 'string' ? lesion.image : null,
+            location: lesion.location,
+            uuid: lesion.uuid,
+            // Only include basic patient info, not complex objects
+            patientInfo: {
+              age: lesion.patientInfo?.age,
+              gender: lesion.patientInfo?.gender
+            }
+          };
+        });
+
+        // For debugging, log the size of the data
+        console.log('Sending data size (MB):', JSON.stringify(lesionData).length / (1024 * 1024));
+
+        // Check if data is too large for IPC
+        if (JSON.stringify(lesionData).length > 50 * 1024 * 1024) {  // 50MB limit
+          throw new Error('Data is too large to send. Consider batching or reducing image quality.');
+        }
+
+      // Call the melanoma analysis controller
+        const response = await ipc.invoke(ipcApiRoute.melanoma.analyzeLesions, {
+          lesions: lesionData
+        });
+
+        try {
+          // Update step 1 to 100% to indicate pre-processing is complete
+          step1.progress = 100;
+          step1.status = 'completed';
+          step1.message = 'Pre-processing complete';
+
+          // Skip directly to step 4: Risk Assessment
+          analysisStatus.value = 'Assessing risk factors...';
+          const step4 = analysisSteps.value[3];
+          step4.status = 'in-progress';
+          step4.message = 'Calculating risk probabilities...';
+          simulateProgress(step4, 0, 50, 1000, null);
+
+          // Send the data to Python backend for processing using Electron-Egg's API
+          // const response = await ipc.ipcRenderer.invoke(ipcApiRoute.melanoma.analyzeLesions, {
+          //   lesions: lesionData
+          // });
+
+          console.log('Start ipcApiRoute.melanoma.analyzeLesions....');
+
+          const response = await ipc.invoke(ipcApiRoute.melanoma.analyzeLesions, {
+            lesions: lesionData
+          });
+          console.log('Python analysis response:', response);
+
+          // Update progress
+          step4.progress = 100;
+          step4.status = 'completed';
+          step4.message = 'Risk assessment complete';
+
+          // Complete analysis
+          analysisStatus.value = 'Analysis complete!';
+          analysisOverallProgress.value = 100;
+          allowCloseAnalysisModal.value = true;
+          isAnalysisCompleted.value = true;
+
+          // Update lesion data with analysis results from Python
+          if (response && response.lesions) {
+            updateLesionsWithAnalysisResults(response.lesions);
+          } else {
+            console.error('Invalid response from Python backend:', response);
+          }
+        } catch (error) {
+          console.error('Error calling Python service:', error);
+          analysisStatus.value = 'Analysis failed: ' + error.message;
+          allowCloseAnalysisModal.value = true;
+
+          // Mark the risk assessment step as failed
+          const step4 = analysisSteps.value[3];
+          step4.status = 'error';
+          step4.message = 'Analysis failed: ' + error.message;
+        }
+      } catch (error) {
+        console.error('Error in analysis process:', error);
+        analysisStatus.value = 'Analysis failed: ' + error.message;
+        allowCloseAnalysisModal.value = true;
+      }
+    };
+
+// Update to accept external analysis results
+    const updateLesionsWithAnalysisResults = (analysisResults) => {
+      lesions.value = lesions.value.map(lesion => {
+        // Find matching analysis result
+        const result = analysisResults.find(r => r.id === lesion.id);
+
+        if (result) {
           return {
             ...lesion,
-            probability: randomProbability,
-            asymmetry: Math.random() * 0.9 + 0.1,
-            border: Math.random() * 0.9 + 0.1,
-            color: Math.random() * 0.9 + 0.1,
-            dimensions: `${(Math.random() * 6 + 2).toFixed(1)}x${(Math.random() * 6 + 2).toFixed(1)}`,
+            probability: result.probability,
+            asymmetry: result.asymmetry,
+            border: result.border,
+            color: result.color,
+            dimensions: result.dimensions,
           };
         }
         return lesion;
@@ -559,8 +704,9 @@ export default {
           .sort((a, b) => b.probability - a.probability)
           .filter(lesion => {
             if (filters.bodyRegion !== 'all' && lesion.location !== filters.bodyRegion) return false;
-            const [width] = lesion.dimensions.split('x').map(d => parseFloat(d));
-            return width >= filters.minSize && width <= filters.maxSize;
+            return true;
+            // const width = lesion.dimensions;
+            // return width >= filters.minSize && width <= filters.maxSize;
           });
     });
 

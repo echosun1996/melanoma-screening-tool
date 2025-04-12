@@ -1,3 +1,4 @@
+# conda activate ScreenToolPC
 from cx_Freeze import setup, Executable
 
 # 创建可执行文件的配置
@@ -12,13 +13,25 @@ options = {
         "build_exe":"./dist/",
         "excludes": ["*.txt"],
         "optimize": 2,
+        "include_files": ["requirements.txt"],  # Include requirements file for documentation
+        "packages": [
+            "flask",
+            "numpy",
+            "PIL",
+            "cv2",
+            "logging",
+            "argparse",
+            "datetime"
+        ],  # Make sure required packages are included
+        "includes": ["argparse"]  # Ensure command line argument parsing works
     }
 }
 
 setup(
     name="pyapp",
     version="1.0",
-    description="python app",
+    description="Melanoma Analysis Python Backend",
+    author="Echo Sun",
     options=options,
     executables=[executableApp]
 )

@@ -27,8 +27,8 @@
           <p class="text-sm text-gray-600 mt-1">{{ status }}</p>
         </div>
 
-        <!-- Individual step progress -->
-        <div v-for="(step, index) in steps" :key="index" class="border-t pt-4">
+        <!-- Individual step progress - only showing first and fourth steps -->
+        <div v-for="(step, index) in filteredSteps" :key="index" class="border-t pt-4">
           <div class="flex justify-between mb-1">
             <p class="flex items-center">
               <span
@@ -105,6 +105,26 @@ export default {
     isCompleted: {
       type: Boolean,
       default: false
+    }
+  },
+  computed: {
+    // Filter to only show the first and fourth steps
+    filteredSteps() {
+      if (!this.steps || this.steps.length === 0) return [];
+
+      const result = [];
+
+      // Add first step (Image Pre-processing)
+      if (this.steps.length >= 1) {
+        result.push(this.steps[0]);
+      }
+
+      // Add fourth step (Risk Assessment)
+      if (this.steps.length >= 4) {
+        result.push(this.steps[3]);
+      }
+
+      return result;
     }
   },
   methods: {

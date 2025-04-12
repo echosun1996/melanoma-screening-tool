@@ -37,64 +37,13 @@ class CrossService {
     } else {
       cross.killByName(name);
     }
-  }  
-
-  /**
-   * create go service
-   * In the default configuration, services can be started with applications. 
-   * Developers can turn off the configuration and create it manually.
-   */   
-  async createGoServer(): Promise<void> {
-    // method 1: Use the default Settings
-    //const entity = await cross.run(serviceName);
-
-    // method 2: Use custom configuration
-    const serviceName = "go";
-    const opt = {
-      name: 'goapp',
-      cmd: path.join(getExtraResourcesDir(), 'goapp'),
-      directory: getExtraResourcesDir(),
-      args: ['--port=7073'],
-      appExit: true,
-    }
-    const entity = await cross.run(serviceName, opt);
-    logger.info('server name:', entity.name);
-    logger.info('server config:', entity.config);
-    logger.info('server url:', entity.getUrl());
   }
 
   /**
-   * create java server
-   */
-  async createJavaServer(): Promise<void> {
-    const serviceName = "java";
-    const jarPath = path.join(getExtraResourcesDir(), 'java-app.jar');
-    const opt = {
-      name: 'javaapp',
-      cmd: path.join(getExtraResourcesDir(), 'jre1.8.0_201/bin/javaw.exe'),
-      directory: getExtraResourcesDir(),
-      args: ['-jar', '-server', '-Xms512M', '-Xmx512M', '-Xss512k', '-Dspring.profiles.active=prod', `-Dserver.port=18080`, `-Dlogging.file.path=${getLogDir()}`, `${jarPath}`],
-      appExit: false,
-    }
-    if (is.macOS()) {
-      // Setup Java program
-      opt.cmd = path.join(getExtraResourcesDir(), 'jre1.8.0_201.jre/Contents/Home/bin/java');
-    }
-    if (is.linux()) {
-      // Setup Java program
-    }
-
-    const entity = await cross.run(serviceName, opt);
-    logger.info('server name:', entity.name);
-    logger.info('server config:', entity.config);
-    logger.info('server url:', cross.getUrl(entity.name));
-  }  
-
-  /**
    * create python service
-   * In the default configuration, services can be started with applications. 
+   * In the default configuration, services can be started with applications.
    * Developers can turn off the configuration and create it manually.
-   */   
+   */
   async createPythonServer(): Promise<void> {
     // method 1: Use the default Settings
     //const entity = await cross.run(serviceName);
@@ -115,30 +64,77 @@ class CrossService {
     logger.info('server url:', entity.getUrl());
   }
 
-  async requestApi(name: string, urlPath: string, params: any): Promise<any> {
+  /**
+   * Request API from cross service
+   * Enhanced to support both GET and POST methods with configurable timeout
+   */
+  async requestApi(name: string, urlPath: string, params: any, options: any = {}): Promise<any> {
     const serverUrl = cross.getUrl(name);
-    const apiHello = serverUrl + urlPath;
-    console.log('Server Url:', serverUrl);
+    const apiUrl = serverUrl + urlPath;
+    logger.info(`Requesting API: ${apiUrl}`);
 
-    const response = await axios({
+    // Default options
+    const defaultOptions = {
       method: 'get',
-      url: apiHello,
-      timeout: 1000,
-      params,
+      timeout: 30000, // Increased timeout for larger requests
       proxy: false,
-    });
-    if (response.status == 200) {
-      const { data } = response;
-      return data;
+    };
+
+    // Merge with custom options
+    const requestOptions = {
+      ...defaultOptions,
+      ...options,
+      url: apiUrl,
+    };
+
+    // Handle data based on method
+    if (requestOptions.method.toLowerCase() === 'post') {
+      requestOptions.data = params;
+    } else {
+      requestOptions.params = params;
+    }
+
+    logger.info('Request options:', requestOptions);
+
+    try {
+      const response = await axios(requestOptions);
+      if (response.status === 200) {
+        const { data } = response;
+        return data;
+      }
+    } catch (error) {
+      logger.error('API request error:', error);
+      throw error;
     }
 
     return null;
-  }  
+  }
+
+  /**
+   * Analyze lesion images using Python backend
+   */
+  async analyzeLesions(lesionData: any[]): Promise<any> {
+    try {
+      logger.info(`Analyzing ${lesionData.length} lesions with Python backend`);
+
+      // Call the Python backend using POST method for larger data
+      const data = await this.requestApi('pyapp', '/analyze', lesionData, {
+        method: 'post',
+        timeout: 60000, // 60 seconds timeout for image processing
+      });
+
+      return data;
+    } catch (error) {
+      logger.error('Error analyzing lesions:', error);
+      throw error;
+    }
+  }
 }
+
 CrossService.toString = () => '[class CrossService]';
 const crossService = new CrossService();
 
 export {
-  CrossService, 
-  crossService 
-}; 
+  CrossService,
+  crossService
+};

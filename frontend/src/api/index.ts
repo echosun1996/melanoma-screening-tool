@@ -29,6 +29,10 @@ const ipcApiRoute = {
     window1ToWindow2: 'controller/os/window1ToWindow2',
     window2ToWindow1: 'controller/os/window2ToWindow1',
   },
+  // melanoma analysis
+  melanoma: {
+    analyzeLesions: 'controller/melanoma/analyzeLesions',
+  },
 }
 
 const specialIpcRoute = {
