@@ -179,6 +179,20 @@
             </div>
 
             <div class="bg-white p-4 rounded shadow">
+              <h3 class="font-medium mb-2">Analysis Result</h3>
+              <div class="grid grid-cols-2 gap-2 text-sm">
+                <div>ud_scores_image:</div>
+                <div class="text-right">{{ selectedLesion.ud_scores_image !== -1 ? (selectedLesion.ud_scores_image).toFixed(2) + '' : 'N/A' }}</div>
+                <div>ud_scores_tabular:</div>
+                <div class="text-right">{{ selectedLesion.ud_scores_tabular !== -1 ? (selectedLesion.ud_scores_tabular ).toFixed(2) + '' : 'N/A' }}</div>
+                <div>ud_scores_imageTabular:</div>
+                <div class="text-right">{{ selectedLesion.ud_scores_imageTabular !== -1 ? (selectedLesion.ud_scores_imageTabular ).toFixed(2) + '' : 'N/A' }}</div>
+                <div>risk_score:</div>
+                <div class="text-right">{{ selectedLesion.risk_score !== -1? (selectedLesion.risk_score).toFixed(2) + '' : 'N/A'}}</div>
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded shadow">
               <h3 class="font-medium mb-2">Management Recommendations</h3>
               <div class="space-y-3">
                 <div
@@ -440,6 +454,8 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import gsap from 'gsap';
 import UploadScanModal from './UploadScanModal.vue';
 import AnalysisProgressModal from './AnalysisProgressModal.vue';
+import axios from 'axios';
+
 
 
 
@@ -484,7 +500,7 @@ export default {
     const analysisStatus = ref('Preparing analysis...');
     const analysisSteps = ref([
       {
-        name: 'Image Pre-processing',
+        name: 'Server Connection',
         progress: 0,
         status: 'pending',
         message: 'Waiting to start...'
@@ -510,6 +526,12 @@ export default {
     ]);
     const allowCloseAnalysisModal = ref(false);
     const isAnalysisCompleted = ref(false);
+
+    // New state for tracking individual lesion progress
+    const currentLesion = ref(null);
+    const totalLesions = ref(null);
+    const currentLesionId = ref(null);
+
 
     // Simulated analysis function
     const startAnalysis = () => {
@@ -569,130 +591,242 @@ export default {
 
       updateProgress();
     };
-
     const simulateAnalysisProcess = async () => {
       try {
-        // Step 1: Image Pre-processing
-        analysisStatus.value = 'Pre-processing images...';
+        // Only start if we have lesions to analyze
+        if (lesions.value.length === 0) {
+          throw new Error('No lesions to analyze. Please upload a scan first.');
+        }
+
+        // Reset analysis state
+        analysisOverallProgress.value = 0;
+        analysisStatus.value = 'Preparing analysis...';
+        analysisSteps.value.forEach(step => {
+          step.progress = 0;
+          step.status = 'pending';
+          step.message = 'Waiting to start...'
+        });
+        allowCloseAnalysisModal.value = false;
+        isAnalysisCompleted.value = false;
+
+        // Initialize tracking variables for current lesion
+        currentLesion.value = 0;
+        totalLesions.value = lesions.value.length;
+        currentLesionId.value = null;
+
+        // Open the modal
+        isAnalysisModalOpen.value = true;
+
+        // Inside your simulateAnalysisProcess function:
+
+// Step 1: Testing server connection with /hello endpoint
+        analysisStatus.value = 'Testing connection to server...';
         const step1 = analysisSteps.value[0];
         step1.status = 'in-progress';
-        step1.message = 'Enhancing image quality...';
+        step1.message = 'Connecting to analysis server...';
+        step1.progress = 30;
 
-        // Update first step progress to show activity
-        simulateProgress(step1, 0, 50, 1000, null);
-
-        // Prepare data to send to Python backend
-        // Prepare data to send to Python backend
-        const lesionData = lesions.value.map(lesion => {
-          // Create a simplified object with only the data we need
-          return {
-            id: lesion.id,
-            // Make sure image is a base64 string and not too large
-            // If it's already a base64 string, use it directly
-            // If it's a URL or something else, you might need to handle it differently
-            image: typeof lesion.image === 'string' ? lesion.image : null,
-            location: lesion.location,
-            uuid: lesion.uuid,
-            // Only include basic patient info, not complex objects
-            patientInfo: {
-              age: lesion.patientInfo?.age,
-              gender: lesion.patientInfo?.gender
-            }
-          };
-        });
-
-        // For debugging, log the size of the data
-        console.log('Sending data size (MB):', JSON.stringify(lesionData).length / (1024 * 1024));
-
-        // Check if data is too large for IPC
-        if (JSON.stringify(lesionData).length > 50 * 1024 * 1024) {  // 50MB limit
-          throw new Error('Data is too large to send. Consider batching or reducing image quality.');
-        }
-
-      // Call the melanoma analysis controller
-        const response = await ipc.invoke(ipcApiRoute.melanoma.analyzeLesions, {
-          lesions: lesionData
-        });
-
+// Test connection to the server using IPC to call /hello endpoint
         try {
-          // Update step 1 to 100% to indicate pre-processing is complete
+          console.log('Testing connection to server with /hello endpoint');
+
+          // Use IPC to call the hello endpoint
+          const response = await ipc.invoke(ipcApiRoute.melanoma.helloServer);
+
+          if (!response || response.status !== 'success') {
+            throw new Error('Server did not return a success response');
+          }
+
+          console.log('Server connection test successful:', response);
+
+          // Update step progress
           step1.progress = 100;
           step1.status = 'completed';
-          step1.message = 'Pre-processing complete';
+          step1.message = 'Server connection established successfully';
 
-          // Skip directly to step 4: Risk Assessment
-          analysisStatus.value = 'Assessing risk factors...';
-          const step4 = analysisSteps.value[3];
-          step4.status = 'in-progress';
-          step4.message = 'Calculating risk probabilities...';
-          simulateProgress(step4, 0, 50, 1000, null);
-
-          // Send the data to Python backend for processing using Electron-Egg's API
-          // const response = await ipc.ipcRenderer.invoke(ipcApiRoute.melanoma.analyzeLesions, {
-          //   lesions: lesionData
-          // });
-
-          console.log('Start ipcApiRoute.melanoma.analyzeLesions....');
-
-          const response = await ipc.invoke(ipcApiRoute.melanoma.analyzeLesions, {
-            lesions: lesionData
-          });
-          console.log('Python analysis response:', response);
-
-          // Update progress
-          step4.progress = 100;
-          step4.status = 'completed';
-          step4.message = 'Risk assessment complete';
-
-          // Complete analysis
-          analysisStatus.value = 'Analysis complete!';
-          analysisOverallProgress.value = 100;
-          allowCloseAnalysisModal.value = true;
-          isAnalysisCompleted.value = true;
-
-          // Update lesion data with analysis results from Python
-          if (response && response.lesions) {
-            updateLesionsWithAnalysisResults(response.lesions);
-          } else {
-            console.error('Invalid response from Python backend:', response);
-          }
         } catch (error) {
-          console.error('Error calling Python service:', error);
-          analysisStatus.value = 'Analysis failed: ' + error.message;
+          console.error('Server connection test failed:', error);
+          step1.status = 'error';
+          step1.message = `Failed to connect to server: ${error.message || 'Unknown error'}`;
+
+          // Don't continue with analysis if server connection failed
+          analysisStatus.value = 'Analysis failed: Cannot connect to server';
           allowCloseAnalysisModal.value = true;
 
-          // Mark the risk assessment step as failed
+          // Mark step 4 as not started
           const step4 = analysisSteps.value[3];
-          step4.status = 'error';
-          step4.message = 'Analysis failed: ' + error.message;
+          step4.status = 'pending';
+          step4.message = 'Server connection failed';
+
+          return;
         }
+
+        // Brief pause after connection test
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Create a reference to the risk assessment step
+        const step4 = analysisSteps.value[3];
+        step4.status = 'pending';
+        step4.message = 'Waiting for connection test to complete...';
+
+        // Process each lesion one at a time
+        const processedLesions = [];
+
+        for (let i = 0; i < lesions.value.length; i++) {
+          // Update current lesion tracking
+          currentLesion.value = i + 1;
+          currentLesionId.value = lesions.value[i].id;
+
+          // Update overall progress based on current lesion
+          analysisOverallProgress.value = Math.round((i / lesions.value.length) * 100);
+
+          // Update status with current lesion info
+          analysisStatus.value = `Analyzing lesion ${i + 1} of ${lesions.value.length}`;
+
+          // Update risk assessment step
+          step4.status = 'in-progress';
+          step4.message = `Evaluating lesion ${i + 1} of ${lesions.value.length}`;
+          step4.progress = Math.round((i / lesions.value.length) * 100);
+
+          try {
+            // Prepare single lesion data object
+            const lesion = lesions.value[i];
+            const lesionData = {
+              id: lesion.id,
+              image: typeof lesion.image === 'string' ? lesion.image : null,
+              gender: lesion.patientInfo?.gender || '',
+              age: lesion.patientInfo?.age || 0,
+              A: lesion.A || 0,
+              Aext: lesion.Aext || 0,
+              B: lesion.B || 0,
+              Bext: lesion.Bext || 0,
+              C: lesion.C || 0,
+              Cext: lesion.Cext || 0,
+              H: lesion.H || 0,
+              Hext: lesion.Hext || 0,
+              L: lesion.L || 0,
+              Lext: lesion.Lext || 0,
+              areaMM2: lesion.areaMM2 || 0,
+              area_perim_ratio: lesion.area_perim_ratio || 0,
+              color_std_mean: lesion.color_std_mean || 0,
+              deltaA: lesion.deltaA || 0,
+              deltaB: lesion.deltaB || 0,
+              deltaL: lesion.deltaL || 0,
+              deltaLB: lesion.deltaLB || 0,
+              deltaLBnorm: lesion.deltaLBnorm || 0,
+              dnn_lesion_confidence: lesion.dnn_lesion_confidence || 0,
+              eccentricity: lesion.eccentricity || 0,
+              location_simple: lesion.location || '',
+              majorAxisMM: lesion.majorAxisMM || 0,
+              minorAxisMM: lesion.minorAxisMM || 0,
+              nevi_confidence: lesion.nevi_confidence || 0,
+              norm_border: lesion.norm_border || 0,
+              norm_color: lesion.norm_color || 0,
+              perimeterMM: lesion.perimeterMM || 0,
+              radial_color_std_max: lesion.radial_color_std_max || 0,
+              stdL: lesion.stdL || 0,
+              stdLExt: lesion.stdLExt || 0,
+              symm_2axis: lesion.symm_2axis || 0,
+              symm_2axis_angle: lesion.symm_2axis_angle || 0,
+            };
+
+            console.log(`Analyzing lesion ${i + 1} of ${lesions.value.length}: ${lesion.id}`);
+
+            // Call Python backend
+            const response = await ipc.invoke(ipcApiRoute.melanoma.analyzeLesions, {
+              lesions: [lesionData]
+            });
+
+            console.log(`Lesion ${i + 1} analysis response:`, response);
+
+            // Add processed lesion to results array
+            if (response && response.lesions && response.lesions.length > 0) {
+              processedLesions.push(response.lesions[0]);
+
+              // Simulate a brief pause between lesions
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          } catch (error) {
+            console.error(`Error processing lesion ${i + 1}:`, error);
+            analysisStatus.value = `Error analyzing lesion ${i + 1}: ${error.message}`;
+            step4.message = `Error analyzing lesion ${i + 1}: ${error.message}`;
+
+            // Brief pause to show error message
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+
+        // Analysis complete
+        analysisStatus.value = 'Analysis complete!';
+        analysisOverallProgress.value = 100;
+
+        // Update step 4 to completed
+        step4.status = 'completed';
+        step4.progress = 100;
+        step4.message = `All ${lesions.value.length} lesions analyzed successfully`;
+
+        allowCloseAnalysisModal.value = true;
+        isAnalysisCompleted.value = true;
+        currentLesion.value = null; // Clear current lesion indicator
+        currentLesionId.value = null;
+
+        // Update lesions with analysis results
+        if (processedLesions.length > 0) {
+          updateLesionsWithAnalysisResults(processedLesions);
+        }
+
       } catch (error) {
         console.error('Error in analysis process:', error);
         analysisStatus.value = 'Analysis failed: ' + error.message;
         allowCloseAnalysisModal.value = true;
+
+        // Mark step 4 as error
+        const step4 = analysisSteps.value[3];
+        step4.status = 'error';
+        step4.message = 'Analysis failed: ' + error.message;
       }
     };
-
-// Update to accept external analysis results
+    // Update to accept external analysis results
     const updateLesionsWithAnalysisResults = (analysisResults) => {
       lesions.value = lesions.value.map(lesion => {
-        // Find matching analysis result
+        // 找到匹配的分析结果
         const result = analysisResults.find(r => r.id === lesion.id);
 
         if (result) {
+          console.log('Analysis Results:', result.ud_scores_image, result.risk_score, result.uuid);
+
+          // 合并新的分析结果到现有的病变对象
+          // 如果分析结果中某个值为null或undefined，则设置为-1，这样模板中的条件就能正确工作
           return {
             ...lesion,
-            probability: result.probability,
-            asymmetry: result.asymmetry,
-            border: result.border,
-            color: result.color,
-            dimensions: result.dimensions,
+            // 使用新的输出参数
+            ud_scores_image: result.ud_scores_image ?? -1, // 使用空值合并运算符
+            ud_scores_tabular: result.ud_scores_tabular ?? -1,
+            ud_scores_imageTabular: result.ud_scores_imageTabular ?? -1,
+            risk_score: result.risk_score ?? -1,
+
+            // 把risk_score映射到probability以保持UI兼容性
+            probability: result.risk_score || 0,
+
+            // 保留现有的ABCD分析数据或使用默认值
+            asymmetry: lesion.asymmetry ?? -1,
+            border: lesion.border ?? -1,
+            color: lesion.color ?? -1,
+            dimensions: lesion.dimensions ?? -1
           };
         }
         return lesion;
       });
-    };
 
+      // 如果当前选中的病变在分析结果中，则更新selectedLesion引用
+      // 这确保了右侧面板会刷新
+      if (selectedLesion.value) {
+        const updatedSelectedLesion = lesions.value.find(l => l.id === selectedLesion.value.id);
+        if (updatedSelectedLesion) {
+          selectedLesion.value = updatedSelectedLesion;
+        }
+      }
+    };
     const cancelAnalysis = () => {
       // In a real application, you would stop the analysis process here
       isAnalysisModalOpen.value = false;
@@ -860,7 +994,7 @@ export default {
         'Right Arm': ['mixamorig1RightForeArm'],
         'Left Leg': ['mixamorig1LeftLeg'],
         'Right Leg': ['mixamorig1RightLeg'],
-        'Torso Front': ['mixamorig1Spine'],
+        'Torso Front': ['mixamorig1FontTwo'],
         'Torso Back': ['mixamorig1Hips'],
         'Unknown': []
       };
@@ -889,7 +1023,7 @@ export default {
             child.metalness = 0;
 
             // Store the original material for this mesh
-            originalMaterials.value[child.uuid] = child.material.clone();
+            originalMaterials.value[child.id] = child.material.clone();
 
             // Store meshes by name for region highlighting
             // This helps when bones aren't directly accessible
@@ -1017,170 +1151,98 @@ export default {
           }
         });
       };
+      // 在highlightBodyRegion函数开始时彻底清除之前的所有标记
+      const clearAllHighlights = () => {
+        // 移除所有已存在的标记
+        Object.keys(highlightMeshes.value).forEach(lesionId => {
+          const markers = highlightMeshes.value[lesionId];
+          markers.forEach(mesh => {
+            if (mesh.parent) {
+              mesh.parent.remove(mesh);
+            }
+            if (mesh.geometry) mesh.geometry.dispose();
+            if (mesh.material) mesh.material.dispose();
+
+            // 清理相关的点光源
+            if (mesh.userData.pointLight && mesh.userData.pointLight.parent) {
+              mesh.userData.pointLight.parent.remove(mesh.userData.pointLight);
+            }
+          });
+        });
+
+        // 重置高亮网格对象
+        highlightMeshes.value = {};
+
+        // 重置所有网格材质到原始状态
+        model.value.traverse((child) => {
+          if (child.isMesh && originalMaterials.value[child.id]) {
+            child.material = originalMaterials.value[child.id].clone();
+            child.material.needsUpdate = true;
+          }
+        });
+      };
 
       // Function to highlight the body region corresponding to a lesion
       const highlightBodyRegion = (lesion) => {
+        clearAllHighlights();
         // Reset all meshes to original materials first
         model.value.traverse((child) => {
-          if (child.isMesh && originalMaterials.value[child.uuid]) {
-            child.material = originalMaterials.value[child.uuid].clone();
+          if (child.isMesh && originalMaterials.value[child.id]) {
+            child.material = originalMaterials.value[child.id].clone();
             child.material.needsUpdate = true;
           }
         });
 
         if (!lesion) return;
 
-        console.log(`Highlighting region for location: ${lesion.location}`);
+        console.log(`Attempting to highlight region for location: ${lesion.location}`);
 
         // Get the bones related to this location
         const bonesToHighlight = locationToBoneMap[lesion.location] || [];
 
-        // Find all meshes connected to the bones we want to highlight
-        // This is challenging because the connection between meshes and bones varies by model
+        // Log all bone names for debugging
+        console.log("Available bones in model:");
+        Object.keys(bonesMap.value).forEach(boneName => {
+          const bone = bonesMap.value[boneName];
+          const position = new THREE.Vector3();
+          bone.getWorldPosition(position);
+          console.log(`Bone: ${boneName}, Position: x=${position.x.toFixed(2)}, y=${position.y.toFixed(2)}, z=${position.z.toFixed(2)}`);
+        });
 
-        // First approach: Try to find meshes by bone names
-        let highlightedAnyMesh = false;
+        // Log the bones we're looking for
+        console.log("Bones to highlight for this location:", bonesToHighlight);
+
+        // Perform only exact bone name matching
+        let foundExactMatch = false;
 
         if (bonesToHighlight.length > 0) {
           // Create a set of bone names for faster lookup
           const boneNameSet = new Set(bonesToHighlight);
 
-          // Traverse the model and look for meshes that might be associated with these bones
-          model.value.traverse((child) => {
-            if (child.isMesh) {
-              // Check name-based association
-              const meshName = child.name.toLowerCase();
-
-              // Different approaches to match meshes to bones
-              let shouldHighlight = false;
-
-              // 1. Direct check if any bone name appears in the mesh name
-              for (const boneName of bonesToHighlight) {
-                // Extract the descriptive part of the bone name (without mixamorig1 prefix)
-                const descriptivePart = boneName.replace('mixamorig1', '').toLowerCase();
-
-                if (meshName.includes(descriptivePart.toLowerCase())) {
-                  shouldHighlight = true;
-                  break;
-                }
-              }
-
-              // 2. Check for body part keywords based on location
-              if (!shouldHighlight) {
-                // Special handling for left/right parts
-                if (lesion.location.includes('Left') &&
-                    (meshName.includes('left') || meshName.includes('_l_') || meshName.includes('_l.'))) {
-                  shouldHighlight = true;
-                }
-                else if (lesion.location.includes('Right') &&
-                    (meshName.includes('right') || meshName.includes('_r_') || meshName.includes('_r.'))) {
-                  shouldHighlight = true;
-                }
-                else if (lesion.location.includes('Head') &&
-                    (meshName.includes('head') || meshName.includes('face') || meshName.includes('neck'))) {
-                  shouldHighlight = true;
-                }
-                else if (lesion.location.includes('Torso') &&
-                    (meshName.includes('torso') || meshName.includes('chest') ||
-                        meshName.includes('spine') || meshName.includes('body'))) {
-
-                  // For torso, differentiate between front and back if possible
-                  if (lesion.location === 'Torso Front' || lesion.location === 'Torso Back') {
-                    // Get mesh center position
-                    const bbox = new THREE.Box3().setFromObject(child);
-                    const center = new THREE.Vector3();
-                    bbox.getCenter(center);
-
-                    const isFront = lesion.location === 'Torso Front';
-                    // Use local Z coordinate to distinguish front from back
-                    // May need adjustment based on your model's orientation
-                    const meshZ = center.z;
-
-                    shouldHighlight = (isFront && meshZ > 0) || (!isFront && meshZ < 0);
-                  } else {
-                    shouldHighlight = true;
-                  }
-                }
-              }
-
-              // 3. Check if the mesh has a skeleton with any of our target bones
-              if (!shouldHighlight && child.skeleton) {
-                for (const bone of child.skeleton.bones) {
-                  if (boneNameSet.has(bone.name)) {
-                    shouldHighlight = true;
-                    break;
-                  }
-                }
-              }
-
-              // Apply highlight if needed
-              if (shouldHighlight) {
-                highlightedAnyMesh = true;
-                applyHighlightMaterial(child);
-              }
-            }
-          });
-        }
-        // If no specific meshes were found, fall back to a different method
-        if (!highlightedAnyMesh) {
-          console.log("No meshes found by bone association. Using generic approach.");
-
-          // Fallback: highlight mesh groups by name pattern
-          model.value.traverse((child) => {
-            if (child.isMesh) {
-              const lowerName = child.name.toLowerCase();
-
-              // Match by body part keywords
-              const locationKeywords = {
-                'Head & Neck': ['head', 'neck', 'face', 'skull'],
-                'Left Arm': ['left', 'arm'],
-                'Right Arm': ['right', 'arm'],
-                'Left Leg': ['left', 'leg', 'foot'],
-                'Right Leg': ['right', 'leg', 'foot'],
-                'Torso Front': ['torso', 'chest', 'front', 'belly'],
-                'Torso Back': ['back', 'spine']
-              }[lesion.location] || [];
-
-              // Check if any keyword matches
-              for (const keyword of locationKeywords) {
-                if (lowerName.includes(keyword)) {
-                  // For torso parts, differentiate front/back
-                  if ((lesion.location === 'Torso Front' || lesion.location === 'Torso Back') &&
-                      (keyword === 'torso' || keyword === 'chest')) {
-
-                    // Get position to determine front/back
-                    const bbox = new THREE.Box3().setFromObject(child);
-                    const center = new THREE.Vector3();
-                    bbox.getCenter(center);
-
-                    const isFront = lesion.location === 'Torso Front';
-                    // May need to adjust this logic based on your model orientation
-                    if ((isFront && center.z > 0) || (!isFront && center.z < 0)) {
-                      applyHighlightMaterial(child);
-                    }
-                  } else {
-                    applyHighlightMaterial(child);
-                  }
-                  break;
-                }
-              }
-            }
-          });
-        }
-
-        // If still no meshes highlighted, create spherical markers at bone positions
-        if (!highlightedAnyMesh) {
-          console.log("Falling back to bone position markers");
-
-          bonesToHighlight.forEach(boneName => {
+          // Find if any of our target bones exist in the model
+          for (const boneName of bonesToHighlight) {
             const bone = bonesMap.value[boneName];
 
             if (bone) {
-              // Get bone world position
+              console.log(`Found exact bone match: ${boneName}`);
+              foundExactMatch = true;
+
+              // Find associated meshes by traversing the model
+              model.value.traverse((child) => {
+                if (child.isMesh) {
+                  // Only match meshes that are directly connected to this bone
+                  if (child.skeleton && child.skeleton.bones.some(b => b.name === boneName)) {
+                    console.log(`Highlighting mesh: ${child.name} (connected to bone: ${boneName})`);
+                    applyHighlightMaterial(child);
+                  }
+                }
+              });
+
+              // Create a marker at the bone position for visibility
               const position = new THREE.Vector3();
               bone.getWorldPosition(position);
 
-              // Create a larger sphere to highlight the region
+              // Create a sphere to highlight the region
               const geometry = new THREE.SphereGeometry(0.08, 32, 32);
               const material = new THREE.MeshBasicMaterial({
                 color: 0xff0000,
@@ -1200,9 +1262,20 @@ export default {
               }
               highlightMeshes.value[lesion.id].push(marker);
             }
-          });
+          }
+        }
+
+        if (!foundExactMatch) {
+          console.log(`No exact bone matches found for location: ${lesion.location}. No highlighting applied.`);
+
+          // Add a visualization of the location map
+          console.log("Location to Bone Map:");
+          for (const [location, bones] of Object.entries(locationToBoneMap)) {
+            console.log(`${location}: ${bones.join(', ')}`);
+          }
         }
       };
+
       // Helper function to apply highlight material to a mesh
       const applyHighlightMaterial = (mesh) => {
         // Create a highlighted material
@@ -1218,8 +1291,8 @@ export default {
         });
 
         // Copy maps from original material if they exist
-        if (originalMaterials.value[mesh.uuid]) {
-          const origMat = originalMaterials.value[mesh.uuid];
+        if (originalMaterials.value[mesh.id]) {
+          const origMat = originalMaterials.value[mesh.id];
           if (origMat.map) highlightMaterial.map = origMat.map;
           if (origMat.normalMap) highlightMaterial.normalMap = origMat.normalMap;
         }
@@ -1377,15 +1450,6 @@ export default {
     });
 
     return {
-      // New state and methods for analysis
-      isAnalysisModalOpen,
-      analysisOverallProgress,
-      analysisStatus,
-      analysisSteps,
-      allowCloseAnalysisModal,
-      isAnalysisCompleted,
-      startAnalysis,
-      cancelAnalysis,
       // State
       lesions,
       riskThresholdValue,
@@ -1396,6 +1460,19 @@ export default {
       enlargedImage,
       isUploadModalOpen,
       canvasRef,
+
+      // Analysis state
+      isAnalysisModalOpen,
+      analysisOverallProgress,
+      analysisStatus,
+      analysisSteps,
+      allowCloseAnalysisModal,
+      isAnalysisCompleted,
+      currentLesion,      // New
+      totalLesions,       // New
+      currentLesionId,    // New
+      startAnalysis,
+      cancelAnalysis,
 
       // Computed
       highRiskLesions,

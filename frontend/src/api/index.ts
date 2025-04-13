@@ -32,7 +32,13 @@ const ipcApiRoute = {
   // melanoma analysis
   melanoma: {
     analyzeLesions: 'controller/melanoma/analyzeLesions',
+    helloServer: 'controller/melanoma/helloServer'  // Add this line
+
   },
+  // cross: {
+  //   // requestApi: 'controller.melanoma.requestApi',
+  //   helloServer: 'controller.melanoma.helloServer'  // Add this line
+  // },
 }
 
 const specialIpcRoute = {

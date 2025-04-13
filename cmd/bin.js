@@ -190,11 +190,18 @@ module.exports = {
       cmd: 'go',
       args: ['run', './main.go', '--env=dev','--basedir=../', '--port=7073'],
     },
+    // python: {
+    //   directory: './python',
+    //   cmd: 'python',
+    //   args: ['./main.py', '--port=7074'],
+    //   stdio: "inherit", // ignore
+    // },
     python: {
       directory: './python',
-      cmd: 'python',
-      args: ['./main.py', '--port=7074'],
-      stdio: "inherit", // ignore
+      cmd: 'conda',
+      args: ['run', '-n', 'ScreenToolPC', 'python', './main.py', '--port=7074'],
+      // stdio: "inherit", // ignore
+      // args: ['./setup.py', 'build'],
     },
   },
 };

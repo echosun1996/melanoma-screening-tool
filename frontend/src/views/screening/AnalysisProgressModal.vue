@@ -25,6 +25,14 @@
             ></div>
           </div>
           <p class="text-sm text-gray-600 mt-1">{{ status }}</p>
+
+          <!-- Current lesion progress indicator -->
+          <div v-if="currentLesion && totalLesions" class="mt-2 bg-blue-50 border border-blue-200 rounded p-2">
+            <p class="text-sm text-blue-800">
+              Processing lesion {{ currentLesion }} of {{ totalLesions }}
+              <span v-if="currentLesionId" class="font-mono text-xs block mt-1">ID: {{ currentLesionId }}</span>
+            </p>
+          </div>
         </div>
 
         <!-- Individual step progress - only showing first and fourth steps -->
@@ -37,6 +45,9 @@
               >
                 <svg v-if="step.status === 'completed'" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <svg v-else-if="step.status === 'error'" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                 </svg>
               </span>
               {{ step.name }}
@@ -54,20 +65,21 @@
         </div>
       </div>
 
-      <div class="mt-6 flex justify-end">
+      <div class="mt-6 flex justify-end space-x-2">
         <button
-            v-if="isCompleted"
-            @click="$emit('close')"
-            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          View Results
-        </button>
-        <button
-            v-else-if="allowCancel"
+            v-if="allowCancel && !isCompleted"
             @click="$emit('cancel')"
             class="px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200"
         >
           Cancel Analysis
+        </button>
+        <button
+            v-if="isCompleted || allowClose"
+            @click="$emit('close')"
+            :class="isCompleted ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'"
+            class="px-4 py-2 rounded"
+        >
+          {{ isCompleted ? 'View Results' : 'Close' }}
         </button>
       </div>
     </div>
@@ -105,6 +117,19 @@ export default {
     isCompleted: {
       type: Boolean,
       default: false
+    },
+    // New props for tracking individual lesion progress
+    currentLesion: {
+      type: Number,
+      default: null
+    },
+    totalLesions: {
+      type: Number,
+      default: null
+    },
+    currentLesionId: {
+      type: String,
+      default: null
     }
   },
   computed: {

@@ -69,8 +69,8 @@ class CrossService {
    * Enhanced to support both GET and POST methods with configurable timeout
    */
   async requestApi(name: string, urlPath: string, params: any, options: any = {}): Promise<any> {
-    const serverUrl = cross.getUrl(name);
-    const apiUrl = serverUrl + urlPath;
+    // 构建完整的 API URL
+    const apiUrl = `http://127.0.0.1:7074${urlPath.startsWith('/') ? urlPath : '/' + urlPath}`;
     logger.info(`Requesting API: ${apiUrl}`);
 
     // Default options
@@ -113,14 +113,42 @@ class CrossService {
   /**
    * Analyze lesion images using Python backend
    */
-  async analyzeLesions(lesionData: any[]): Promise<any> {
+  async analyzeLesions(lesionData: any): Promise<any> {
     try {
-      logger.info(`Analyzing ${lesionData.length} lesions with Python backend`);
+      // 确保请求数据格式正确
+      const lesions = Array.isArray(lesionData.lesions) ? lesionData.lesions : [];
+      logger.info(`Analyzing ${lesions.length} lesions with Python backend`);
+
+      // 构建完整的请求对象，确保包含所需结构
+      const requestData = {
+        lesions: lesions,
+        requestMetadata: {
+          appVersion: lesionData.requestMetadata?.appVersion || "1.0.0",
+          device: lesionData.requestMetadata?.device || "Electron App",
+          timestamp: lesionData.requestMetadata?.timestamp || new Date().toISOString(),
+          requestId: lesionData.requestMetadata?.requestId || `req_${Date.now()}`
+        }
+      };
+
+      // 记录请求大小（不包含图像数据，仅用于日志）
+      const requestDataCopy = JSON.parse(JSON.stringify(requestData));
+      if (requestDataCopy.lesions) {
+        requestDataCopy.lesions.forEach((lesion: any) => {
+          if (lesion.image) {
+            lesion.image = '[Base64 Image Data]';
+          }
+        });
+      }
+      logger.info('Request structure:', requestDataCopy);
+      logger.info('Data size (MB):', JSON.stringify(requestData).length / (1024 * 1024));
 
       // Call the Python backend using POST method for larger data
-      const data = await this.requestApi('pyapp', '/analyze', lesionData, {
+      const data = await this.requestApi('pyapp', '/analyze', requestData, {
         method: 'post',
         timeout: 60000, // 60 seconds timeout for image processing
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       return data;

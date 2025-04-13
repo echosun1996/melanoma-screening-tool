@@ -894,6 +894,11 @@ export default {
               z: -0.12
             },
 
+            ud_scores_image: -1,//predict
+            ud_scores_tabular: -1,//predict
+            ud_scores_imageTabular: -1,//predict
+            risk_score: -1,//predict
+
             A: lesion.A,// ML input
             Aext: lesion.Aext,// ML input
             B: lesion.B,// ML input
