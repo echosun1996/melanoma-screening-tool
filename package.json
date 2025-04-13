@@ -1,6 +1,6 @@
 {
   "name": "melanoma_screening_tool",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "MelanomaScreeningTool",
   "main": "public/electron/main.js",
   "scripts": {

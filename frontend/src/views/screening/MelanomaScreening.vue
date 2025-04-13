@@ -17,6 +17,11 @@
           >
             Start Analysis
           </button>
+          <button
+              class="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+          >
+            Save Analysis
+          </button>
         </div>
       </div>
     </div>
@@ -604,6 +609,14 @@ export default {
 
           if (!response || response.status !== 'success') {
             throw new Error('Server did not return a success response');
+          }
+          // if (response.model_loaded !== 'true'){
+          //   throw new Error('Machine Learning model load failed.');
+          // }
+          if ((response.model_loaded === false) ||
+              (response.data && response.data.model_loaded === false) ||
+              (response.result && response.result.model_loaded === false)) {
+            throw new Error('Machine Learning model load failed.');
           }
 
           console.log('Server connection test successful:', response);

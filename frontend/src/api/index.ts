@@ -11,6 +11,7 @@ const ipcApiRoute = {
     pathExists: 'controller/os/pathExists',
     readdir: 'controller/os/readdir',
     readFile: 'controller/os/readFile',
+    writeFile: 'controller/os/writeFile',
     messageShow: 'controller/os/messageShow',
     messageShowConfirm: 'controller/os/messageShowConfirm',
     selectFolder: 'controller/os/selectFolder',

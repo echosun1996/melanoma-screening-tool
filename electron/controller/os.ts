@@ -73,6 +73,97 @@ class OsController {
       return Promise.resolve({ error: `Failed to read file: ${err.message}` });
     }
   }
+  /**
+   * Write content to a file with proper error handling
+   * @param args File path and content or object containing path, data and encoding
+   * @param data Optional content parameter if first argument is string
+   * @param encoding Optional encoding parameter if needed
+   * @returns Success status object or error object
+   */
+  writeFile(args: any, data?: any, encoding?: string): Promise<{ success: boolean, error?: string }> {
+    const logPrefix = '[OsController.writeFile]';
+
+    try {
+      // Filter out Event objects that might be passed by Electron IPC
+      if (args && typeof args === 'object' && args.sender && args.sender.send) {
+        logger.debug(`${logPrefix} Detected Event object as first argument, shifting parameters`);
+        // This is an Electron event object
+        if (arguments.length >= 3) {
+          // If we have 3+ arguments, the structure might be (event, path, data, encoding)
+          args = data;
+          data = encoding;
+          encoding = arguments[3];
+        } else {
+          // Skip the event object and check if the second argument is the actual data
+          logger.warn(`${logPrefix} Received Event object but not enough parameters`);
+          return Promise.resolve({ success: false, error: 'Invalid arguments: Event object received but not enough parameters' });
+        }
+      }
+
+      let filePath: string;
+      let fileData: string | Buffer;
+      let fileEncoding: string | null = null;
+
+      // Handle different parameter formats
+      if (typeof args === 'string') {
+        filePath = args;
+        fileData = data;
+        fileEncoding = encoding || null;
+        logger.debug(`${logPrefix} String format - Path: ${filePath}`);
+      } else if (args && typeof args === 'object') {
+        filePath = args.path;
+        fileData = args.data;
+        fileEncoding = args.encoding || encoding || null;
+        logger.debug(`${logPrefix} Object format - Path: ${filePath}`);
+      } else {
+        logger.warn(`${logPrefix} Invalid arguments type: ${typeof args}`);
+        return Promise.resolve({ success: false, error: `Invalid arguments type: ${typeof args}` });
+      }
+
+      // Validate inputs
+      if (!filePath) {
+        logger.warn(`${logPrefix} No file path provided`);
+        return Promise.resolve({ success: false, error: 'No file path provided' });
+      }
+
+      if (fileData === undefined || fileData === null) {
+        logger.warn(`${logPrefix} No data provided for path: ${filePath}`);
+        return Promise.resolve({ success: false, error: 'No data provided' });
+      }
+
+      // Check if fileData is valid (string or Buffer)
+      if (typeof fileData !== 'string' && !Buffer.isBuffer(fileData)) {
+        logger.error(`${logPrefix} Invalid data type: ${typeof fileData}, constructor: ${fileData.constructor?.name}`);
+        return Promise.resolve({
+          success: false,
+          error: `Invalid data type: ${typeof fileData}. Must be string or Buffer.`
+        });
+      }
+
+      // Create directory if it doesn't exist
+      const dirPath = path.dirname(filePath);
+      if (!fs.existsSync(dirPath)) {
+        logger.debug(`${logPrefix} Creating directory: ${dirPath}`);
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+
+      // Write file with or without encoding
+      if (fileEncoding) {
+        fs.writeFileSync(filePath, fileData, { encoding: fileEncoding as BufferEncoding });
+      } else {
+        fs.writeFileSync(filePath, fileData);
+      }
+
+      logger.debug(`${logPrefix} File written successfully: ${filePath}`);
+      return Promise.resolve({ success: true });
+    } catch (err) {
+      logger.error(`${logPrefix} Error writing file:`, err);
+      return Promise.resolve({
+        success: false,
+        error: `Failed to write file: ${err.message}`
+      });
+    }
+  }
 
   /**
    * Check if a path exists

@@ -709,26 +709,52 @@ export default {
     const fetchLesionData = async () => {
       isLoading.value = true;
       try {
-        // Construct the JSON file path
+        // Construct the JSON file paths
         let jsonPath = `${basePath.value}/${selectedPatientFolder.value}/${selectedScanFolder.value}/analysis/lesion_data_1.2.4.json`;
+        let backupPath = `${basePath.value}/${selectedPatientFolder.value}/${selectedScanFolder.value}/analysis/lesion_data_1.2.4.backup.json`;
+        let version = "1.2.4";
 
         // Check if the file exists
         let fileExists = await ipc.invoke(ipcApiRoute.os.pathExists, jsonPath);
 
         if (!fileExists) {
-
+          // Try the 1.3.0 version
           jsonPath = `${basePath.value}/${selectedPatientFolder.value}/${selectedScanFolder.value}/analysis/lesion_data_1.3.0.json`;
+          backupPath = `${basePath.value}/${selectedPatientFolder.value}/${selectedScanFolder.value}/analysis/lesion_data_1.3.0.backup.json`;
+          version = "1.3.0";
+
           fileExists = await ipc.invoke(ipcApiRoute.os.pathExists, jsonPath);
           if (!fileExists) {
             message.error('Required file lesion_data.json not found in the selected scan folder');
             isLoading.value = false;
             return false; // Return false to indicate failure
-          }else{
-            message.info("Load 1.3.0: "+jsonPath)
+          } else {
+            message.info(`Found lesion_data_${version}.json`);
           }
+        } else {
+          message.info(`Found lesion_data_${version}.json`);
         }
-        else{
-          message.info("Load 1.2.4: "+jsonPath)
+
+        // Check if backup exists
+        const backupExists = await ipc.invoke(ipcApiRoute.os.pathExists, backupPath);
+
+        // If backup doesn't exist, create it before proceeding
+        if (!backupExists) {
+          try {
+            // Read the original JSON file
+            const jsonContent = await ipc.invoke(ipcApiRoute.os.readFile, jsonPath, 'utf-8');
+
+            // Create a backup
+            await ipc.invoke(ipcApiRoute.os.writeFile, backupPath, jsonContent, 'utf-8');
+
+            message.success(`Created backup of lesion_data_${version}.json to ${backupPath}`);
+          } catch (backupError) {
+            console.error('Error creating backup:', backupError);
+            message.warning(`Unable to create backup of lesion_data_${version}.json: ${backupError.message}`);
+            // Continue anyway since this is a non-critical error
+          }
+        } else {
+          message.info(`Backup of lesion_data_${version}.json already exists`);
         }
 
         // Read the JSON file
@@ -736,8 +762,6 @@ export default {
 
         // Parse the JSON data
         const jsonData = JSON.parse(jsonContent);
-
-        message.info(jsonData)
 
         // Process lesion data
         if (jsonData && jsonData.root && jsonData.root.children) {
@@ -799,7 +823,6 @@ export default {
         isLoading.value = false;
       }
     };
-
     const toggleLesionSelection = (index) => {
       const position = selectedLesions.value.indexOf(index);
       if (position !== -1) {
