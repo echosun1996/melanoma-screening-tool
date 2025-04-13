@@ -383,13 +383,17 @@
             </div>
 
             <div class="flex space-x-2 mt-4">
-              <button class="flex-1 px-4 py-2 bg-green-100 text-green-800 rounded hover:bg-green-200">
-                Mark Reviewed
+              <button
+                  class="flex-1 px-4 py-2 bg-green-100 text-green-800 rounded hover:bg-green-200"
+                  @click="analyzeSingleLesion"
+              >
+                Analysis
               </button>
               <button class="flex-1 px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200">
                 Flag for Biopsy
               </button>
             </div>
+
           </div>
         </div>
         <div v-else class="p-4 text-gray-500">
@@ -532,75 +536,42 @@ export default {
     const totalLesions = ref(null);
     const currentLesionId = ref(null);
 
-
-    // Simulated analysis function
+    const analyzeSingleLesion = () => {
+      if (!selectedLesion.value) {
+        // No lesion selected
+        alert('Please select a lesion to analyze');
+        return;
+      }
+      // Call the main analysis method with just the selected lesion
+      simulateAnalysisProcess(selectedLesion.value);
+    };
+      // Simulated analysis function
     const startAnalysis = () => {
       // Only start if we have lesions to analyze
       if (lesions.value.length === 0) {
         alert('No lesions to analyze. Please upload a scan first.');
         return;
       }
-
-      // Reset analysis state
-      analysisOverallProgress.value = 0;
-      analysisStatus.value = 'Preparing analysis...';
-      analysisSteps.value.forEach(step => {
-        step.progress = 0;
-        step.status = 'pending';
-        step.message = 'Waiting to start...';
-      });
-      allowCloseAnalysisModal.value = false;
-      isAnalysisCompleted.value = false;
-
-      // Open the modal
-      isAnalysisModalOpen.value = true;
-
-      // Start the analysis simulation
+      // // Call the main simulation process with no specific lesion (analyze all)
       simulateAnalysisProcess();
     };
 
-    /**
-     * Simulates progress for a step over time
-     * @param {Object} step - The step object to update progress for
-     * @param {number} startValue - Starting progress value
-     * @param {number} endValue - Target progress value
-     * @param {number} duration - Duration in milliseconds
-     * @param {Function|null} onComplete - Optional callback when progress reaches 100%
-     */
-    const simulateProgress = (step, startValue, endValue, duration, onComplete) => {
-      const startTime = Date.now();
-      const updateInterval = 100; // Update every 100ms
-
-      const updateProgress = () => {
-        const elapsedTime = Date.now() - startTime;
-        const progress = Math.min(100, startValue + ((endValue - startValue) * elapsedTime / duration));
-
-        step.progress = Math.round(progress);
-
-        // Update overall progress based on all steps
-        analysisOverallProgress.value = Math.round(
-            analysisSteps.value.reduce((sum, s) => sum + s.progress, 0) / analysisSteps.value.length
-        );
-
-        if (progress < endValue) {
-          setTimeout(updateProgress, updateInterval);
-        } else if (onComplete) {
-          onComplete();
-        }
-      };
-
-      updateProgress();
-    };
-    const simulateAnalysisProcess = async () => {
+    const simulateAnalysisProcess = async (singleLesion = null) => {
       try {
+        // Set the lesions to analyze - either all or just one
+        const lesionsToAnalyze = singleLesion ? [singleLesion] : lesions.value;
+
         // Only start if we have lesions to analyze
-        if (lesions.value.length === 0) {
+        if (lesionsToAnalyze.length === 0) {
           throw new Error('No lesions to analyze. Please upload a scan first.');
         }
 
         // Reset analysis state
         analysisOverallProgress.value = 0;
-        analysisStatus.value = 'Preparing analysis...';
+        analysisStatus.value = singleLesion ?
+            'Preparing analysis for selected lesion...' :
+            'Preparing analysis...';
+
         analysisSteps.value.forEach(step => {
           step.progress = 0;
           step.status = 'pending';
@@ -611,22 +582,20 @@ export default {
 
         // Initialize tracking variables for current lesion
         currentLesion.value = 0;
-        totalLesions.value = lesions.value.length;
+        totalLesions.value = lesionsToAnalyze.length;
         currentLesionId.value = null;
 
         // Open the modal
         isAnalysisModalOpen.value = true;
 
-        // Inside your simulateAnalysisProcess function:
-
-// Step 1: Testing server connection with /hello endpoint
+        // Step 1: Testing server connection with /hello endpoint
         analysisStatus.value = 'Testing connection to server...';
         const step1 = analysisSteps.value[0];
         step1.status = 'in-progress';
         step1.message = 'Connecting to analysis server...';
         step1.progress = 30;
 
-// Test connection to the server using IPC to call /hello endpoint
+        // Test connection to the server using IPC to call /hello endpoint
         try {
           console.log('Testing connection to server with /hello endpoint');
 
@@ -672,25 +641,25 @@ export default {
         // Process each lesion one at a time
         const processedLesions = [];
 
-        for (let i = 0; i < lesions.value.length; i++) {
+        for (let i = 0; i < lesionsToAnalyze.length; i++) {
           // Update current lesion tracking
           currentLesion.value = i + 1;
-          currentLesionId.value = lesions.value[i].id;
+          currentLesionId.value = lesionsToAnalyze[i].id;
 
           // Update overall progress based on current lesion
-          analysisOverallProgress.value = Math.round((i / lesions.value.length) * 100);
+          analysisOverallProgress.value = Math.round((i / lesionsToAnalyze.length) * 100);
 
           // Update status with current lesion info
-          analysisStatus.value = `Analyzing lesion ${i + 1} of ${lesions.value.length}`;
+          analysisStatus.value = `Analyzing lesion ${i + 1} of ${lesionsToAnalyze.length}`;
 
           // Update risk assessment step
           step4.status = 'in-progress';
-          step4.message = `Evaluating lesion ${i + 1} of ${lesions.value.length}`;
-          step4.progress = Math.round((i / lesions.value.length) * 100);
+          step4.message = `Evaluating lesion ${i + 1} of ${lesionsToAnalyze.length}`;
+          step4.progress = Math.round((i / lesionsToAnalyze.length) * 100);
 
           try {
             // Prepare single lesion data object
-            const lesion = lesions.value[i];
+            const lesion = lesionsToAnalyze[i];
             const lesionData = {
               id: lesion.id,
               image: typeof lesion.image === 'string' ? lesion.image : null,
@@ -730,7 +699,7 @@ export default {
               symm_2axis_angle: lesion.symm_2axis_angle || 0,
             };
 
-            console.log(`Analyzing lesion ${i + 1} of ${lesions.value.length}: ${lesion.id}`);
+            console.log(`Analyzing lesion ${i + 1} of ${lesionsToAnalyze.length}: ${lesion.id}`);
 
             // Call Python backend
             const response = await ipc.invoke(ipcApiRoute.melanoma.analyzeLesions, {
@@ -757,13 +726,15 @@ export default {
         }
 
         // Analysis complete
-        analysisStatus.value = 'Analysis complete!';
+        analysisStatus.value = singleLesion ?
+            'Analysis of selected lesion complete!' :
+            'Analysis complete!';
         analysisOverallProgress.value = 100;
 
         // Update step 4 to completed
         step4.status = 'completed';
         step4.progress = 100;
-        step4.message = `All ${lesions.value.length} lesions analyzed successfully`;
+        step4.message = `All ${lesionsToAnalyze.length} lesions analyzed successfully`;
 
         allowCloseAnalysisModal.value = true;
         isAnalysisCompleted.value = true;
@@ -786,6 +757,8 @@ export default {
         step4.message = 'Analysis failed: ' + error.message;
       }
     };
+
+
     // Update to accept external analysis results
     const updateLesionsWithAnalysisResults = (analysisResults) => {
       lesions.value = lesions.value.map(lesion => {
@@ -1451,6 +1424,7 @@ export default {
 
     return {
       // State
+      analyzeSingleLesion,
       lesions,
       riskThresholdValue,
       riskThreshold,
