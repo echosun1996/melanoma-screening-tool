@@ -505,6 +505,8 @@ export default {
   },
   emits: ['close', 'submit'],
   setup(props, { emit }) {
+
+    const jsonFilePath = ref('');
     // Step state
     const currentStep = ref(1);
     const isLoading = ref(false);
@@ -706,6 +708,7 @@ export default {
       selectedScanFolder.value = folderName;
     };
 
+    // Find this method in UploadScanModal.vue and replace it with this updated version
     const fetchLesionData = async () => {
       isLoading.value = true;
       try {
@@ -734,6 +737,8 @@ export default {
         } else {
           message.info(`Found lesion_data_${version}.json`);
         }
+        // Store the jsonFilePath for later use
+        jsonFilePath.value = jsonPath;
 
         // Check if backup exists
         const backupExists = await ipc.invoke(ipcApiRoute.os.pathExists, backupPath);
@@ -745,7 +750,21 @@ export default {
             const jsonContent = await ipc.invoke(ipcApiRoute.os.readFile, jsonPath, 'utf-8');
 
             // Create a backup
-            await ipc.invoke(ipcApiRoute.os.writeFile, backupPath, jsonContent, 'utf-8');
+            try {
+              const result = await ipc.invoke(ipcApiRoute.os.writeFile, {
+                path: backupPath,
+                data: jsonContent, // String or Buffer
+                encoding: 'utf-8'
+              });
+
+              if (result.success) {
+                console.log('File written successfully');
+              } else {
+                console.error('Failed to write file:', result.error);
+              }
+            } catch (error) {
+              console.error('IPC error:', error);
+            }
 
             message.success(`Created backup of lesion_data_${version}.json to ${backupPath}`);
           } catch (backupError) {
@@ -765,50 +784,66 @@ export default {
 
         // Process lesion data
         if (jsonData && jsonData.root && jsonData.root.children) {
-          lesionData.value = jsonData.root.children.map(child => ({
-            dnn_lesion_confidence: child.dnn_lesion_confidence || 0,
-            nevi_confidence: child.nevi_confidence || 0,
-            majorAxisMM: child.majorAxisMM || 0,
-            deltaLBnorm: child.deltaLBnorm || 0,
-            out_of_bounds_fraction: child.out_of_bounds_fraction || 0,
-            imageUrl: "data:image/png;base64," + (child.img64cc || ''),
-            uuid: child.uuid || 0,
-            location_simple: child.location_simple || '',
+          lesionData.value = jsonData.root.children.map(child => {
+            // Important: Preserve original values for the critical analysis fields
+            // Don't use || which can override valid zero values
+            const ud_scores_image = child.hasOwnProperty('ud_scores_image') ? child.ud_scores_image : -1;
+            const ud_scores_tabular = child.hasOwnProperty('ud_scores_tabular') ? child.ud_scores_tabular : -1;
+            const ud_scores_imageTabular = child.hasOwnProperty('ud_scores_imageTabular') ? child.ud_scores_imageTabular : -1;
+            const risk_score = child.hasOwnProperty('risk_score') ? child.risk_score : -1;
 
-            // ML
-            age: child.age || 0,
-            gender: child.gender || '',
 
-            A: child.A || 0,
-            Aext: child.Aext || 0,
-            B: child.B || 0,
-            Bext: child.Bext || 0,
-            C: child.C || 0,
-            Cext: child.Cext || 0,
-            H: child.H || 0,
-            Hext: child.Hext || 0,
-            L: child.L || 0,
-            Lext: child.Lext || 0,
+            return {
+              // Use the preserved values directly
+              ud_scores_image: ud_scores_image,
+              ud_scores_tabular: ud_scores_tabular,
+              ud_scores_imageTabular: ud_scores_imageTabular,
+              risk_score: risk_score,
 
-            areaMM2: child.areaMM2 || 0,
-            area_perim_ratio: child.area_perim_ratio || 0,
-            color_std_mean: child.color_std_mean || 0,
-            deltaA: child.deltaA || 0,
-            deltaB: child.deltaB || 0,
-            deltaL: child.deltaL || 0,
-            deltaLB: child.deltaLB || 0,
+              dnn_lesion_confidence: child.dnn_lesion_confidence || 0,
+              nevi_confidence: child.nevi_confidence || 0,
+              majorAxisMM: child.majorAxisMM || 0,
+              deltaLBnorm: child.deltaLBnorm || 0,
+              out_of_bounds_fraction: child.out_of_bounds_fraction || 0,
+              imageUrl: "data:image/png;base64," + (child.img64cc || ''),
+              uuid: child.uuid || 0,
+              location_simple: child.location_simple || '',
 
-            eccentricity: child.eccentricity || 0,
-            minorAxisMM: child.minorAxisMM || 0,
-            norm_border: child.norm_border || 0,
-            norm_color: child.norm_color || 0,
-            perimeterMM: child.perimeterMM || 0,
-            radial_color_std_max: child.radial_color_std_max || 0,
-            stdL: child.stdL || 0,
-            stdLExt: child.stdLExt || 0,
-            symm_2axis: child.symm_2axis || 0,
-            symm_2axis_angle: child.symm_2axis_angle || 0
-          }));
+              // ML
+              age: child.age || 0,
+              gender: child.gender || '',
+
+              A: child.A || 0,
+              Aext: child.Aext || 0,
+              B: child.B || 0,
+              Bext: child.Bext || 0,
+              C: child.C || 0,
+              Cext: child.Cext || 0,
+              H: child.H || 0,
+              Hext: child.Hext || 0,
+              L: child.L || 0,
+              Lext: child.Lext || 0,
+
+              areaMM2: child.areaMM2 || 0,
+              area_perim_ratio: child.area_perim_ratio || 0,
+              color_std_mean: child.color_std_mean || 0,
+              deltaA: child.deltaA || 0,
+              deltaB: child.deltaB || 0,
+              deltaL: child.deltaL || 0,
+              deltaLB: child.deltaLB || 0,
+
+              eccentricity: child.eccentricity || 0,
+              minorAxisMM: child.minorAxisMM || 0,
+              norm_border: child.norm_border || 0,
+              norm_color: child.norm_color || 0,
+              perimeterMM: child.perimeterMM || 0,
+              radial_color_std_max: child.radial_color_std_max || 0,
+              stdL: child.stdL || 0,
+              stdLExt: child.stdLExt || 0,
+              symm_2axis: child.symm_2axis || 0,
+              symm_2axis_angle: child.symm_2axis_angle || 0
+            };
+          });
           selectedLesions.value = Array.from({ length: filteredLesions.value.length }, (_, i) => i);
           return true; // Return true to indicate success
         } else {
@@ -880,99 +915,87 @@ export default {
         message.error('An error occurred while proceeding to the next step');
       }
     };
-
+// Find this method in UploadScanModal.vue and replace it with this updated version
     const importSelectedLesions = () => {
       if (selectedLesions.value.length > 0) {
         const lesionsToImport = selectedLesions.value.map((index, arrayIndex) => {
+
+
+
           const lesion = filteredLesions.value[index];
 
-          // Default lesion confidence calculation
-          const probability = 100;
-
-          // Create new lesion object
+          // Create new lesion object - THIS IS THE CRITICAL PART
           return {
-
             id: arrayIndex + 1, // Re-number starting from 1
             uuid: lesion.uuid,
             image: lesion.imageUrl, // ML input
             location: lesion.location_simple,
             patientFolderName: `${selectedPatientFolder.value}`,
             scanTime: `${formatTimestamp(selectedScanFolder.value)}`,
+            jsonFilePath: jsonFilePath.value, // Add the JSON file path
 
-            probability: probability,
+            // Important: Directly use the analysis result values without modification
+            // These should be either the existing values from the JSON or -1 if not present
+            ud_scores_image: lesion.ud_scores_image,
+            ud_scores_tabular: lesion.ud_scores_tabular,
+            ud_scores_imageTabular: lesion.ud_scores_imageTabular,
+            risk_score: lesion.risk_score,
+
             skinClass: lesion.nevi_confidence >= 80 ? "Melanocytic" : "Non-melanocytic",
-            recommendedAction: probability >= 0.8 ? "Urgent Biopsy" :
-                probability >= 0.6 ? "Urgent Review" :
-                    probability >= 0.5 ? "Review" : "Monitor",
-            // dimensions: `${lesion.majorAxisMM.toFixed(1)}mm x ${(lesion.majorAxisMM * 0.8).toFixed(1)}mm`,
-            dimensions:-1,
-            // dimensions: `-1`,
-            asymmetry: -1, // Simulated asymmetry
-            border: -1,   // Simulated border irregularity
-            color: -1,    // Simulated color variation
-            bodyPosition: {
-              region: "upper_back", // Default region
-              x: (Math.random() - 0.5) * 0.1,
-              y: (Math.random() - 0.5) * 0.2,
-              z: -0.12
-            },
+            recommendedAction: lesion.risk_score >= 0.8 ? "Urgent Biopsy" :
+                lesion.risk_score >= 0.6 ? "Urgent Review" :
+                    lesion.risk_score >= 0.5 ? "Review" : "Monitor",
+            dimensions: -1,
+            asymmetry: -1,
+            border: -1,
+            color: -1,
 
-            ud_scores_image: -1,//predict
-            ud_scores_tabular: -1,//predict
-            ud_scores_imageTabular: -1,//predict
-            risk_score: -1,//predict
+            // Include all original data properties - preserving original values
+            A: lesion.A,
+            Aext: lesion.Aext,
+            B: lesion.B,
+            Bext: lesion.Bext,
+            C: lesion.C,
+            Cext: lesion.Cext,
+            H: lesion.H,
+            Hext: lesion.Hext,
+            L: lesion.L,
+            Lext: lesion.Lext,
+            areaMM2: lesion.areaMM2,
+            area_perim_ratio: lesion.area_perim_ratio,
+            color_std_mean: lesion.color_std_mean,
+            deltaA: lesion.deltaA,
+            deltaB: lesion.deltaB,
+            deltaL: lesion.deltaL,
+            deltaLB: lesion.deltaLB,
+            deltaLBnorm: lesion.deltaLBnorm,
+            dnn_lesion_confidence: lesion.dnn_lesion_confidence,
+            eccentricity: lesion.eccentricity,
+            location_simple: lesion.location_simple,
+            majorAxisMM: lesion.majorAxisMM,
+            minorAxisMM: lesion.minorAxisMM,
+            nevi_confidence: lesion.nevi_confidence,
+            norm_border: lesion.norm_border,
+            norm_color: lesion.norm_color,
+            perimeterMM: lesion.perimeterMM,
+            radial_color_std_max: lesion.radial_color_std_max,
+            stdL: lesion.stdL,
+            stdLExt: lesion.stdLExt,
+            symm_2axis: lesion.symm_2axis,
+            symm_2axis_angle: lesion.symm_2axis_angle,
 
-            A: lesion.A,// ML input
-            Aext: lesion.Aext,// ML input
-            B: lesion.B,// ML input
-            Bext: lesion.Bext,// ML input
-            C: lesion.C,// ML input
-            Cext: lesion.Cext,// ML input
-            H: lesion.H,// ML input
-            Hext: lesion.Hext,// ML input
-            L: lesion.L,// ML input
-            Lext: lesion.Lext,// ML input
-            areaMM2: lesion.areaMM2,// ML input
-            area_perim_ratio: lesion.area_perim_ratio,// ML input
-            color_std_mean: lesion.color_std_mean,// ML input
-            deltaA: lesion.deltaA,// ML input
-            deltaB: lesion.deltaB,// ML input
-            deltaL: lesion.deltaL,// ML input
-            deltaLB: lesion.deltaLB, // ML input
-            deltaLBnorm: lesion.deltaLBnorm, // ML input
-            dnn_lesion_confidence: lesion.dnn_lesion_confidence, // ML input
-            eccentricity: lesion.eccentricity, // ML input
-            location_simple: lesion.location_simple, // ML input
-            majorAxisMM: lesion.majorAxisMM, // ML input
-            minorAxisMM: lesion.minorAxisMM, // ML input
-            nevi_confidence: lesion.nevi_confidence, // ML input
-            norm_border: lesion.norm_border, // ML input
-            norm_color: lesion.norm_color, // ML input
-            perimeterMM: lesion.perimeterMM, // ML input
-            radial_color_std_max: lesion.radial_color_std_max, // ML input
-            stdL: lesion.stdL, // ML input
-            stdLExt: lesion.stdLExt, // ML input
-            symm_2axis: lesion.symm_2axis, // ML input
-            symm_2axis_angle: lesion.symm_2axis_angle, // ML input
-
-            // majorAxisMM: lesion.majorAxisMM.toFixed(1),
-            // deltaLBnorm:lesion.deltaLBnorm.toFixed(1),
-            out_of_bounds_fraction: lesion.out_of_bounds_fraction.toFixed(1),
-            // dnn_lesion_confidence: lesion.dnn_lesion_confidence.toFixed(1),
-            // nevi_confidence: lesion.nevi_confidence.toFixed(1),
-
-            // Add patient information
+            // Patient info
             patientInfo: {
-              age: patientInfo.age || 'Not specified', // ML input
-              gender: patientInfo.gender, // ML input
+              age: patientInfo.age || 'Not specified',
+              gender: patientInfo.gender,
               notes: patientInfo.notes || ''
             }
           };
         });
 
-        // Send all selected lesions to parent component
+        // Send selected lesions to parent
         emit('submit', lesionsToImport);
-        emit('close'); // Close the modal
+        emit('close');
       }
     };
 
@@ -993,6 +1016,7 @@ export default {
     // Initialization
 
     return {
+      jsonFilePath,
       currentStep,
       isLoading,
       basePath,

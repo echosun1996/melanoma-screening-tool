@@ -19,6 +19,7 @@
           </button>
           <button
               class="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+              @click="saveAnalysis"
           >
             Save Analysis
           </button>
@@ -92,8 +93,7 @@
               <p class="font-bold">Patient: {{ selectedLesion.patientFolderName }}</p>
               <p class="font-bold">Scan Time: {{ selectedLesion.scanTime }}</p>
               <p class="text-red-600 font-bold">
-                <!--                Risk: {{ // (selectedLesion.probability * 100).toFixed(1) }}%-->
-                {{ selectedLesion.probability * 100 >= 10000 ? 'Waiting for Analysis' : 'Risk: '+(selectedLesion.probability * 100).toFixed(1) + '%' }}
+                {{ selectedLesion.risk_score * 100 < 0 ? 'Waiting for Analysis' : 'Risk: '+(selectedLesion.risk_score * 100).toFixed(1) + '%' }}
               </p>
             </div>
             <div class="absolute top-2 right-2 bg-white p-1 rounded-full shadow-md">
@@ -146,11 +146,13 @@
                 <div class="w-full text-center mt-2">
                   <span
                       class="px-2 py-1 rounded text-xs font-medium"
-                      :class="lesion.probability >= riskThreshold && lesion.probability * 100 < 10000
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-gray-100 text-gray-800'"
-                  >
-                    {{ lesion.probability * 100 >= 10000 ? 'Pending' : (lesion.probability * 100).toFixed(1) + '%' }}
+                      :class="lesion.risk_score*100<0
+                      ? 'bg-gray-100 text-gray-800'
+                      : lesion.risk_score > 0.6
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-green-100 text-green-800'"
+                      >
+                    {{ lesion.risk_score * 100 < 0 ? 'Pending' : (lesion.risk_score * 100).toFixed(1) + '%' }}
                   </span>
                 </div>
               </div>
@@ -202,38 +204,50 @@
               <div class="space-y-3">
                 <div
                     class="p-3 rounded"
-                    :class="selectedLesion.probability >= 0.8
-                    ? 'bg-red-50 border border-red-200'
-                    : selectedLesion.probability >= 0.6
-                      ? 'bg-yellow-50 border border-yellow-200'
-                      : 'bg-green-50 border border-green-200'"
+                    :class="selectedLesion.risk_score < 0
+                      ? 'bg-grey-50 border border-grey-200'
+                      : selectedLesion.risk_score >= 0.8
+                        ? 'bg-red-50 border border-red-200'
+                        : selectedLesion.risk_score >= 0.6
+                          ? 'bg-yellow-50 border border-yellow-200'
+                          : 'bg-green-50 border border-green-200'"
                 >
                   <p class="font-medium mb-1">
-                    {{ selectedLesion.probability >= 0.8
-                      ? 'Urgent Action Required'
-                      : selectedLesion.probability >= 0.6
-                          ? 'Further Examination Needed'
-                          : 'Routine Monitoring' }}
+                    {{ selectedLesion.risk_score < 0
+                      ? 'Pending Analysis'
+                      : selectedLesion.risk_score >= 0.8
+                          ? 'Urgent Action Required'
+                          : selectedLesion.risk_score >= 0.6
+                              ? 'Further Examination Needed'
+                              : 'Routine Monitoring' }}
                   </p>
                   <p class="text-sm">
-                    {{ selectedLesion.probability >= 0.8
-                      ? 'Immediate biopsy recommended due to high-risk features. Schedule urgent dermatology consultation.'
-                      : selectedLesion.probability >= 0.6
-                          ? 'Dermoscopic examination recommended. Schedule within 2 weeks for detailed assessment.'
-                          : 'Document and monitor. Review at next routine skin check.' }}
+                    {{
+                      selectedLesion.risk_score < 0
+                          ? ''
+                          : selectedLesion.risk_score>= 0.8
+                            ? 'Immediate biopsy recommended due to high-risk features. Schedule urgent dermatology consultation.'
+                            : selectedLesion.risk_score >= 0.6
+                                ? 'Dermoscopic examination recommended. Schedule within 2 weeks for detailed assessment.'
+                                : 'Document and monitor. Review at next routine skin check.' }}
                   </p>
                 </div>
 
                 <div class="text-sm space-y-2">
                   <h4 class="font-medium">Recommended Actions:</h4>
                   <ul class="list-disc pl-4 space-y-1">
-                    <template v-if="selectedLesion.probability >= 0.8">
+                    <template v-if="selectedLesion.risk_score < 0">
+                      <li>Analysis pending</li>
+                      <li>Results will be available soon</li>
+                      <li>No action required at this time</li>
+                    </template>
+                    <template v-else-if="selectedLesion.risk_score >= 0.8">
                       <li>Schedule immediate biopsy</li>
                       <li>Full-body photography for baseline</li>
                       <li>Consider additional imaging if needed</li>
                       <li>Urgent dermatology referral</li>
                     </template>
-                    <template v-else-if="selectedLesion.probability >= 0.6">
+                    <template v-else-if="selectedLesion.risk_score >= 0.6">
                       <li>Arrange dermoscopic examination</li>
                       <li>Compare with previous images if available</li>
                       <li>Schedule follow-up in 2-4 weeks</li>
@@ -248,7 +262,7 @@
                   </ul>
                 </div>
 
-                <div v-if="selectedLesion.probability >= 0.6" class="text-sm space-y-2">
+                <div v-if="selectedLesion.risk_score >= 0.6" class="text-sm space-y-2">
                   <h4 class="font-medium">Key Features of Concern:</h4>
                   <ul class="list-disc pl-4 space-y-1">
                     <li v-if="selectedLesion.asymmetry > 0.7">
@@ -464,7 +478,7 @@ import gsap from 'gsap';
 import UploadScanModal from './UploadScanModal.vue';
 import AnalysisProgressModal from './AnalysisProgressModal.vue';
 import axios from 'axios';
-
+import { message } from 'ant-design-vue';
 
 
 
@@ -501,6 +515,9 @@ export default {
     const highlightMeshes = ref({});
 
     const ITEMS_PER_PAGE = 50;
+
+
+
 
 
     // New state for analysis progress
@@ -541,6 +558,228 @@ export default {
     const totalLesions = ref(null);
     const currentLesionId = ref(null);
 
+    /**
+     * Custom saveAnalysis function that preserves scientific notation in the original JSON file
+     * This function uses direct text manipulation to add or update only the specific fields
+     * without changing the format of existing values.
+     */
+    const saveAnalysis = async () => {
+      // Check if we have any analyzed lesions to save
+      if (lesions.value.length === 0) {
+        message.warning('No lesions available to save analysis results');
+        return;
+      }
+
+      try {
+        message.loading({ content: 'Saving analysis results...', key: 'saveAnalysis' });
+
+        // Get the jsonFilePath from the first lesion
+        const jsonFilePath = lesions.value[0]?.jsonFilePath;
+
+        if (!jsonFilePath) {
+          message.error({
+            content: 'Missing JSON file path. Please reload the lesions from the file.',
+            key: 'saveAnalysis'
+          });
+          return;
+        }
+
+        // Check if the file still exists
+        const fileExists = await ipc.invoke(ipcApiRoute.os.pathExists, jsonFilePath);
+        if (!fileExists) {
+          message.error({
+            content: 'Could not find original lesion data JSON file at path: ' + jsonFilePath,
+            key: 'saveAnalysis'
+          });
+          return;
+        }
+
+        // Read the original JSON file as a string
+        const jsonContent = await ipc.invoke(ipcApiRoute.os.readFile, jsonFilePath, 'utf-8');
+
+        // // Create a backup of the current file before making any changes
+        // const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        // const backupPath = `${jsonFilePath}.backup.${timestamp}`;
+        //
+        // try {
+        //   await ipc.invoke(ipcApiRoute.os.writeFile, {
+        //     path: backupPath,
+        //     data: jsonContent,
+        //     encoding: 'utf-8'
+        //   });
+        //   console.log(`Created backup: ${backupPath}`);
+        // } catch (backupError) {
+        //   console.error('Error creating backup:', backupError);
+        // }
+
+        // Parse the JSON data to find the UUIDs and structure
+        const jsonData = JSON.parse(jsonContent);
+
+        if (!jsonData || !jsonData.root || !jsonData.root.children) {
+          message.error({ content: 'Invalid JSON file format', key: 'saveAnalysis' });
+          return;
+        }
+
+        // Get child objects by UUID from our analyzed lesions that have valid results
+        const updatesMap = {};
+        let validUpdateCount = 0;
+
+        for (const lesion of lesions.value) {
+          if (!lesion.uuid) continue;
+
+          // Check if any of the four fields have valid values
+          const hasValidData =
+              lesion.ud_scores_image !== undefined && lesion.ud_scores_image !== null && lesion.ud_scores_image !== -1 ||
+              lesion.ud_scores_tabular !== undefined && lesion.ud_scores_tabular !== null && lesion.ud_scores_tabular !== -1 ||
+              lesion.ud_scores_imageTabular !== undefined && lesion.ud_scores_imageTabular !== null && lesion.ud_scores_imageTabular !== -1 ||
+              lesion.risk_score !== undefined && lesion.risk_score !== null && lesion.risk_score !== -1;
+
+          if (hasValidData) {
+            updatesMap[lesion.uuid] = {
+              ud_scores_image: lesion.ud_scores_image,
+              ud_scores_tabular: lesion.ud_scores_tabular,
+              ud_scores_imageTabular: lesion.ud_scores_imageTabular,
+              risk_score: lesion.risk_score
+            };
+            validUpdateCount++;
+          }
+        }
+
+        if (validUpdateCount === 0) {
+          message.info({ content: 'No lesions have analysis results to save', key: 'saveAnalysis' });
+          return;
+        }
+
+        // Now we'll manipulate the JSON file text directly to preserve number formats
+        let modifiedJsonContent = jsonContent;
+
+        // Get child locations in the file
+        for (const child of jsonData.root.children) {
+          if (!child.uuid || !updatesMap[child.uuid]) continue;
+
+          const update = updatesMap[child.uuid];
+
+          // For each child with a matching UUID, find its position in the file
+          // This is a simplified approach that looks for the UUID string
+          const childSearch = `"uuid": "${child.uuid}"`;
+          const childPos = modifiedJsonContent.indexOf(childSearch);
+
+          if (childPos === -1) continue;
+
+          // Find the opening brace of this child object before the UUID
+          let openBracePos = modifiedJsonContent.lastIndexOf('{', childPos);
+          if (openBracePos === -1) continue;
+
+          // Find the matching closing brace by counting braces
+          let braceCount = 1; // We already found one opening brace
+          let closeBracePos = -1;
+
+          for (let i = openBracePos + 1; i < modifiedJsonContent.length; i++) {
+            if (modifiedJsonContent[i] === '{') {
+              braceCount++;
+            } else if (modifiedJsonContent[i] === '}') {
+              braceCount--;
+              if (braceCount === 0) {
+                closeBracePos = i;
+                break;
+              }
+            }
+          }
+
+          if (closeBracePos === -1) continue;
+
+          // Get the current object JSON substring
+          const objectSubstring = modifiedJsonContent.substring(openBracePos, closeBracePos + 1);
+
+          // For each of our four fields, check if it exists and needs updating
+          const fields = ['ud_scores_image', 'ud_scores_tabular', 'ud_scores_imageTabular', 'risk_score'];
+          let updatedSubstring = objectSubstring;
+
+          const fieldsToAdd = [];
+
+          for (const field of fields) {
+            // Skip invalid values
+            if (update[field] === undefined || update[field] === null || update[field] === -1) {
+              continue;
+            }
+
+            // Check if the field already exists in this object
+            const fieldSearch = `"${field}":`;
+            if (updatedSubstring.includes(fieldSearch)) {
+              // Field exists, use regex to update its value
+              const pattern = new RegExp(`("${field}"\\s*:\\s*)[^,\\}\\]]+`);
+              updatedSubstring = updatedSubstring.replace(pattern, `$1${JSON.stringify(update[field])}`);
+            } else {
+              // Field doesn't exist, add it to our list to add later
+              fieldsToAdd.push(field);
+            }
+          }
+
+          // If we have fields to add, insert them before the closing brace
+          if (fieldsToAdd.length > 0) {
+            // Find position right before the closing brace
+            const insertPos = updatedSubstring.lastIndexOf('}');
+            if (insertPos !== -1) {
+              // Check if we need to add a comma
+              const needsComma = updatedSubstring.substring(0, insertPos).trim().slice(-1) !== ',';
+
+              // Create the fields to insert
+              const fieldsText = fieldsToAdd.map(field =>
+                  `    "${field}": ${JSON.stringify(update[field])}`
+              ).join(',\n');
+
+              // Insert the fields
+              updatedSubstring =
+                  updatedSubstring.substring(0, insertPos) +
+                  (needsComma ? ',\n' : '\n') +
+                  fieldsText + '\n' +
+                  updatedSubstring.substring(insertPos);
+            }
+          }
+
+          // Replace the original object with our updated version
+          modifiedJsonContent =
+              modifiedJsonContent.substring(0, openBracePos) +
+              updatedSubstring +
+              modifiedJsonContent.substring(closeBracePos + 1);
+        }
+
+        // Verify that our modified content is valid JSON
+        try {
+          JSON.parse(modifiedJsonContent);
+        } catch (parseError) {
+          console.error('Error parsing modified JSON:', parseError);
+          message.error({
+            content: 'Error creating valid JSON. File not saved.',
+            key: 'saveAnalysis'
+          });
+          return;
+        }
+
+        // Write the updated JSON back to the file
+        const saveResult = await ipc.invoke(ipcApiRoute.os.writeFile, {
+          path: jsonFilePath,
+          data: modifiedJsonContent,
+          encoding: 'utf-8'
+        });
+
+        if (saveResult.success) {
+          message.success({
+            content: `Successfully updated ${validUpdateCount} lesions with analysis results`,
+            key: 'saveAnalysis'
+          });
+        } else {
+          throw new Error(saveResult.error || 'Unknown error writing file');
+        }
+
+      } catch (error) {
+        console.error('Error saving analysis:', error);
+        message.error({
+          content: `Failed to save analysis results: ${error.message}`,
+          key: 'saveAnalysis'
+        });
+      }
+    };
     const analyzeSingleLesion = () => {
       if (!selectedLesion.value) {
         // No lesion selected
@@ -791,8 +1030,6 @@ export default {
             ud_scores_imageTabular: result.ud_scores_imageTabular ?? -1,
             risk_score: result.risk_score ?? -1,
 
-            // 把risk_score映射到probability以保持UI兼容性
-            probability: result.risk_score || 0,
 
             // 保留现有的ABCD分析数据或使用默认值
             asymmetry: lesion.asymmetry ?? -1,
@@ -821,7 +1058,7 @@ export default {
     // Computed properties
     const processedLesions = computed(() => {
       return [...lesions.value]
-          .sort((a, b) => b.probability - a.probability)
+          .sort((a, b) => b.risk_score - a.risk_score)
           .filter(lesion => {
             if (filters.bodyRegion !== 'all' && lesion.location !== filters.bodyRegion) return false;
             return true;
@@ -831,7 +1068,7 @@ export default {
     });
 
     const highRiskLesions = computed(() => {
-      return processedLesions.value.filter(l => l.probability >= riskThreshold.value);
+      return processedLesions.value.filter(l => l.risk_score >= riskThreshold.value||l.risk_score<0);
     });
 
     const visibleLesions = computed(() => {
@@ -852,24 +1089,24 @@ export default {
     };
 
     const handleNewLesion = (newLesion) => {
-      // 如果参数是数组，说明有多个病变要导入
+      // If array, multiple lesions to import
       if (Array.isArray(newLesion)) {
-        // 清空之前的lesions列表，只保留新上传的数据
+        // This replaces all existing lesions with the new ones
         lesions.value = [...newLesion];
 
-        // 选择第一个病变显示在右侧面板
+        // Select first lesion
         if (newLesion.length > 0) {
           selectedLesion.value = newLesion[0];
           showRightPanel.value = true;
         }
       } else {
-        // 处理单个病变的情况 (向后兼容)
-        lesions.value = [newLesion]; // 用新病变替换所有原有病变
+        // Single lesion case (backward compatibility)
+        lesions.value = [newLesion];
         selectedLesion.value = newLesion;
         showRightPanel.value = true;
       }
 
-      // 关闭上传模态框
+      // Close upload modal
       isUploadModalOpen.value = false;
     };
 
@@ -1460,6 +1697,8 @@ export default {
       currentLesionId,    // New
       startAnalysis,
       cancelAnalysis,
+
+      saveAnalysis,
 
       // Computed
       highRiskLesions,
