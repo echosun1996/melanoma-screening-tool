@@ -1014,7 +1014,32 @@ export default {
     };
 
     // Initialization
+    watch(() => props.isOpen, (newValue) => {
+      // 当模态框打开时重置所有状态
+      if (newValue === true) {
+        // 重置到第一步
+        currentStep.value = 1;
 
+        // 重置其他必要的状态
+        selectedPatientFolder.value = '';
+        selectedScanFolder.value = '';
+        searchQuery.value = '';
+        lesionData.value = [];
+        selectedLesions.value = [];
+
+        // 重置过滤器为默认值
+        filters.majorAxisMM = 2.0;
+        filters.deltaLBnorm = 4.5;
+        filters.out_of_bounds_fraction = 0.25;
+        filters.dnn_lesion_confidence = 50.0;
+        filters.nevi_confidence = 80.0;
+
+        // 重置患者信息为默认值
+        patientInfo.age = 25;
+        patientInfo.gender = 'male';
+        patientInfo.notes = '';
+      }
+    });
     return {
       jsonFilePath,
       currentStep,

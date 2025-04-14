@@ -171,33 +171,33 @@
                 :alt="`Lesion ${selectedLesion.id}`"
                 class="w-full rounded"
             />
-            <div class="bg-white p-4 rounded shadow">
-              <h3 class="font-medium mb-2">ABCD Analysis</h3>
-              <div class="grid grid-cols-2 gap-2 text-sm">
-                <div>Asymmetry:</div>
-                <div class="text-right">{{ selectedLesion.asymmetry !== -1 ? (selectedLesion.asymmetry * 100).toFixed(1) + '' : 'N/A' }}</div>
-                <div>Border:</div>
-                <div class="text-right">{{ selectedLesion.border !== -1 ? (selectedLesion.border * 100).toFixed(1) + '' : 'N/A' }}</div>
-                <div>Color Variation:</div>
-                <div class="text-right">{{ selectedLesion.color !== -1 ? (selectedLesion.color * 100).toFixed(1) + '' : 'N/A' }}</div>
-                <div>Dimensions:</div>
-                <div class="text-right">{{ selectedLesion.dimensions !== -1? (selectedLesion.dimensions * 100).toFixed(1) + '' : 'N/A'}}</div>
-              </div>
-            </div>
+<!--            <div class="bg-white p-4 rounded shadow">-->
+<!--              <h3 class="font-medium mb-2">ABCD Analysis</h3>-->
+<!--              <div class="grid grid-cols-2 gap-2 text-sm">-->
+<!--                <div>Asymmetry:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.asymmetry !== -1 ? (selectedLesion.asymmetry * 100).toFixed(1) + '' : 'N/A' }}</div>-->
+<!--                <div>Border:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.border !== -1 ? (selectedLesion.border * 100).toFixed(1) + '' : 'N/A' }}</div>-->
+<!--                <div>Color Variation:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.color !== -1 ? (selectedLesion.color * 100).toFixed(1) + '' : 'N/A' }}</div>-->
+<!--                <div>Dimensions:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.dimensions !== -1? (selectedLesion.dimensions * 100).toFixed(1) + '' : 'N/A'}}</div>-->
+<!--              </div>-->
+<!--            </div>-->
 
-            <div class="bg-white p-4 rounded shadow">
-              <h3 class="font-medium mb-2">Analysis Result</h3>
-              <div class="grid grid-cols-2 gap-2 text-sm">
-                <div>ud_scores_image:</div>
-                <div class="text-right">{{ selectedLesion.ud_scores_image !== -1 ? (selectedLesion.ud_scores_image).toFixed(2) + '' : 'N/A' }}</div>
-                <div>ud_scores_tabular:</div>
-                <div class="text-right">{{ selectedLesion.ud_scores_tabular !== -1 ? (selectedLesion.ud_scores_tabular ).toFixed(2) + '' : 'N/A' }}</div>
-                <div>ud_scores_imageTabular:</div>
-                <div class="text-right">{{ selectedLesion.ud_scores_imageTabular !== -1 ? (selectedLesion.ud_scores_imageTabular ).toFixed(2) + '' : 'N/A' }}</div>
-                <div>risk_score:</div>
-                <div class="text-right">{{ selectedLesion.risk_score !== -1? (selectedLesion.risk_score).toFixed(2) + '' : 'N/A'}}</div>
-              </div>
-            </div>
+<!--            <div class="bg-white p-4 rounded shadow">-->
+<!--              <h3 class="font-medium mb-2">Analysis Result</h3>-->
+<!--              <div class="grid grid-cols-2 gap-2 text-sm">-->
+<!--                <div>ud_scores_image:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.ud_scores_image !== -1 ? (selectedLesion.ud_scores_image).toFixed(2) + '' : 'N/A' }}</div>-->
+<!--                <div>ud_scores_tabular:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.ud_scores_tabular !== -1 ? (selectedLesion.ud_scores_tabular ).toFixed(2) + '' : 'N/A' }}</div>-->
+<!--                <div>ud_scores_imageTabular:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.ud_scores_imageTabular !== -1 ? (selectedLesion.ud_scores_imageTabular ).toFixed(2) + '' : 'N/A' }}</div>-->
+<!--                <div>risk_score:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.risk_score !== -1? (selectedLesion.risk_score).toFixed(2) + '' : 'N/A'}}</div>-->
+<!--              </div>-->
+<!--            </div>-->
 
             <div class="bg-white p-4 rounded shadow">
               <h3 class="font-medium mb-2">Management Recommendations</h3>
@@ -283,7 +283,7 @@
             </div>
 
             <div class="bg-white p-4 rounded shadow mt-4">
-              <h3 class="font-medium mb-2">Selection Criteria</h3>
+              <h3 class="font-medium mb-2">Patient Information</h3>
               <div class="grid grid-cols-2 gap-2 text-sm">
                 <div>ID:</div>
                 <div class="text-right">{{ selectedLesion.uuid || 'N/A' }}</div>
@@ -297,109 +297,109 @@
                 <div>Location:</div>
                 <div class="text-right">{{ selectedLesion.location || 'N/A' }}</div>
 
-                <div>A:</div>
-                <div class="text-right">{{ selectedLesion.A != null ? selectedLesion.A.toFixed(2) : 'N/A' }}</div>
+<!--                <div>A:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.A != null ? selectedLesion.A.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Aext:</div>
-                <div class="text-right">{{ selectedLesion.Aext != null ? selectedLesion.Aext.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Aext:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.Aext != null ? selectedLesion.Aext.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>B:</div>
-                <div class="text-right">{{ selectedLesion.B != null ? selectedLesion.B.toFixed(2) : 'N/A' }}</div>
+<!--                <div>B:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.B != null ? selectedLesion.B.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Bext:</div>
-                <div class="text-right">{{ selectedLesion.Bext != null ? selectedLesion.Bext.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Bext:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.Bext != null ? selectedLesion.Bext.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>C:</div>
-                <div class="text-right">{{ selectedLesion.C != null ? selectedLesion.C.toFixed(2) : 'N/A' }}</div>
+<!--                <div>C:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.C != null ? selectedLesion.C.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Cext:</div>
-                <div class="text-right">{{ selectedLesion.Cext != null ? selectedLesion.Cext.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Cext:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.Cext != null ? selectedLesion.Cext.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>H:</div>
-                <div class="text-right">{{ selectedLesion.H != null ? selectedLesion.H.toFixed(2) : 'N/A' }}</div>
+<!--                <div>H:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.H != null ? selectedLesion.H.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Hext:</div>
-                <div class="text-right">{{ selectedLesion.Hext != null ? selectedLesion.Hext.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Hext:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.Hext != null ? selectedLesion.Hext.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>L:</div>
-                <div class="text-right">{{ selectedLesion.L != null ? selectedLesion.L.toFixed(2) : 'N/A' }}</div>
+<!--                <div>L:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.L != null ? selectedLesion.L.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Lext:</div>
-                <div class="text-right">{{ selectedLesion.Lext != null ? selectedLesion.Lext.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Lext:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.Lext != null ? selectedLesion.Lext.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Area (mm²):</div>
-                <div class="text-right">{{ selectedLesion.areaMM2 != null ? selectedLesion.areaMM2.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Area (mm²):</div>-->
+<!--                <div class="text-right">{{ selectedLesion.areaMM2 != null ? selectedLesion.areaMM2.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Area/Perimeter Ratio:</div>
-                <div class="text-right">{{ selectedLesion.area_perim_ratio != null ? selectedLesion.area_perim_ratio.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Area/Perimeter Ratio:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.area_perim_ratio != null ? selectedLesion.area_perim_ratio.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Colour Std Mean:</div>
-                <div class="text-right">{{ selectedLesion.color_std_mean != null ? selectedLesion.color_std_mean.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Colour Std Mean:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.color_std_mean != null ? selectedLesion.color_std_mean.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Delta A:</div>
-                <div class="text-right">{{ selectedLesion.deltaA != null ? selectedLesion.deltaA.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Delta A:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.deltaA != null ? selectedLesion.deltaA.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Delta B:</div>
-                <div class="text-right">{{ selectedLesion.deltaB != null ? selectedLesion.deltaB.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Delta B:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.deltaB != null ? selectedLesion.deltaB.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Delta L:</div>
-                <div class="text-right">{{ selectedLesion.deltaL != null ? selectedLesion.deltaL.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Delta L:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.deltaL != null ? selectedLesion.deltaL.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Delta LB:</div>
-                <div class="text-right">{{ selectedLesion.deltaLB != null ? selectedLesion.deltaLB.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Delta LB:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.deltaLB != null ? selectedLesion.deltaLB.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Delta LB Norm:</div>
-                <div class="text-right">{{ selectedLesion.deltaLBnorm != null ? selectedLesion.deltaLBnorm.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Delta LB Norm:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.deltaLBnorm != null ? selectedLesion.deltaLBnorm.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>DNN Lesion Confidence (%):</div>
-                <div class="text-right">{{ selectedLesion.dnn_lesion_confidence != null ? selectedLesion.dnn_lesion_confidence.toFixed(2) + '%' : 'N/A' }}</div>
+<!--                <div>DNN Lesion Confidence (%):</div>-->
+<!--                <div class="text-right">{{ selectedLesion.dnn_lesion_confidence != null ? selectedLesion.dnn_lesion_confidence.toFixed(2) + '%' : 'N/A' }}</div>-->
 
-                <div>Nevi Confidence (%):</div>
-                <div class="text-right">{{ selectedLesion.nevi_confidence != null ? selectedLesion.nevi_confidence.toFixed(2) + '%' : 'N/A' }}</div>
+<!--                <div>Nevi Confidence (%):</div>-->
+<!--                <div class="text-right">{{ selectedLesion.nevi_confidence != null ? selectedLesion.nevi_confidence.toFixed(2) + '%' : 'N/A' }}</div>-->
 
-                <div>Eccentricity:</div>
-                <div class="text-right">{{ selectedLesion.eccentricity != null ? selectedLesion.eccentricity.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Eccentricity:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.eccentricity != null ? selectedLesion.eccentricity.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Major Axis (mm):</div>
-                <div class="text-right">{{ selectedLesion.majorAxisMM != null ? selectedLesion.majorAxisMM.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Major Axis (mm):</div>-->
+<!--                <div class="text-right">{{ selectedLesion.majorAxisMM != null ? selectedLesion.majorAxisMM.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Minor Axis (mm):</div>
-                <div class="text-right">{{ selectedLesion.minorAxisMM != null ? selectedLesion.minorAxisMM.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Minor Axis (mm):</div>-->
+<!--                <div class="text-right">{{ selectedLesion.minorAxisMM != null ? selectedLesion.minorAxisMM.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Perimeter (mm):</div>
-                <div class="text-right">{{ selectedLesion.perimeterMM != null ? selectedLesion.perimeterMM.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Perimeter (mm):</div>-->
+<!--                <div class="text-right">{{ selectedLesion.perimeterMM != null ? selectedLesion.perimeterMM.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Normalised Border:</div>
-                <div class="text-right">{{ selectedLesion.norm_border != null ? selectedLesion.norm_border.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Normalised Border:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.norm_border != null ? selectedLesion.norm_border.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Normalised Colour:</div>
-                <div class="text-right">{{ selectedLesion.norm_color != null ? selectedLesion.norm_color.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Normalised Colour:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.norm_color != null ? selectedLesion.norm_color.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Radial Colour Std Max:</div>
-                <div class="text-right">{{ selectedLesion.radial_color_std_max != null ? selectedLesion.radial_color_std_max.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Radial Colour Std Max:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.radial_color_std_max != null ? selectedLesion.radial_color_std_max.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Std L:</div>
-                <div class="text-right">{{ selectedLesion.stdL != null ? selectedLesion.stdL.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Std L:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.stdL != null ? selectedLesion.stdL.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Std L Ext:</div>
-                <div class="text-right">{{ selectedLesion.stdLExt != null ? selectedLesion.stdLExt.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Std L Ext:</div>-->
+<!--                <div class="text-right">{{ selectedLesion.stdLExt != null ? selectedLesion.stdLExt.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Symmetry (2 Axes):</div>
-                <div class="text-right">{{ selectedLesion.symm_2axis != null ? selectedLesion.symm_2axis.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Symmetry (2 Axes):</div>-->
+<!--                <div class="text-right">{{ selectedLesion.symm_2axis != null ? selectedLesion.symm_2axis.toFixed(2) : 'N/A' }}</div>-->
 
-                <div>Symmetry Angle (°):</div>
-                <div class="text-right">{{ selectedLesion.symm_2axis_angle != null ? selectedLesion.symm_2axis_angle.toFixed(2) : 'N/A' }}</div>
+<!--                <div>Symmetry Angle (°):</div>-->
+<!--                <div class="text-right">{{ selectedLesion.symm_2axis_angle != null ? selectedLesion.symm_2axis_angle.toFixed(2) : 'N/A' }}</div>-->
               </div>
             </div>
 
-            <div class="space-y-2 mt-4">
-              <h3 class="font-medium">Clinical Notes</h3>
-              <textarea
-                  class="w-full p-2 border rounded"
-                  rows="3"
-                  placeholder="Add clinical notes..."
-              ></textarea>
-            </div>
+<!--            <div class="space-y-2 mt-4">-->
+<!--              <h3 class="font-medium">Clinical Notes</h3>-->
+<!--              <textarea-->
+<!--                  class="w-full p-2 border rounded"-->
+<!--                  rows="3"-->
+<!--                  placeholder="Add clinical notes..."-->
+<!--              ></textarea>-->
+<!--            </div>-->
 
             <div class="flex space-x-2 mt-4">
               <button
@@ -408,9 +408,9 @@
               >
                 Analysis
               </button>
-              <button class="flex-1 px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200">
-                Flag for Biopsy
-              </button>
+<!--              <button class="flex-1 px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200">-->
+<!--                Flag for Biopsy-->
+<!--              </button>-->
             </div>
 
           </div>
