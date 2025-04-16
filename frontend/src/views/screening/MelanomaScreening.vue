@@ -1,4 +1,4 @@
-<template>
+<template xmlns="http://www.w3.org/1999/html">
   <div class="h-screen flex flex-col overflow-hidden">
     <!-- Header -->
     <div class="bg-white border-b p-4">
@@ -171,6 +171,139 @@
                 :alt="`Lesion ${selectedLesion.id}`"
                 class="w-full rounded"
             />
+
+
+
+            <!-- Scatter Plot Visualization -->
+            <div class="bg-white p-4 rounded shadow">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="font-medium">Risk Distribution</h3>
+                <select
+                    v-model="scatterPlotYAxis"
+                    class="text-xs border rounded px-2 py-1 bg-gray-50"
+                >
+                  <option value="majorAxisMM">Major Axis (mm)</option>
+                  <option value="minorAxisMM">Minor Axis (mm)</option>
+                  <option value="areaMM2">Area (mm²)</option>
+                  <option value="perimeterMM">Perimeter (mm)</option>
+                  <option value="area_perim_ratio">Area/Perimeter Ratio</option>
+                  <option value="eccentricity">Eccentricity</option>
+                  <option value="symm_2axis">Symmetry (2 Axes)</option>
+                  <option value="symm_2axis_angle">Symmetry Angle (°)</option>
+                  <option value="norm_border">Normalized Border</option>
+                  <option value="norm_color">Normalized Color</option>
+                  <option value="color_std_mean">Color Std Mean</option>
+                  <option value="radial_color_std_max">Radial Color Std Max</option>
+                  <option value="A">A Value</option>
+                  <option value="Aext">A Extended</option>
+                  <option value="B">B Value</option>
+                  <option value="Bext">B Extended</option>
+                  <option value="C">C Value</option>
+                  <option value="Cext">C Extended</option>
+                  <option value="H">H Value</option>
+                  <option value="Hext">H Extended</option>
+                  <option value="L">L Value</option>
+                  <option value="Lext">L Extended</option>
+                  <option value="deltaA">Delta A</option>
+                  <option value="deltaB">Delta B</option>
+                  <option value="deltaL">Delta L</option>
+                  <option value="deltaLB">Delta LB</option>
+                  <option value="deltaLBnorm">Delta LB Norm</option>
+                  <option value="stdL">Std L</option>
+                  <option value="stdLExt">Std L Ext</option>
+                  <option value="dnn_lesion_confidence">DNN Lesion Confidence</option>
+                  <option value="nevi_confidence">Nevi Confidence</option>
+                  <option value="asymmetry">Asymmetry</option>
+                  <option value="border">Border</option>
+                  <option value="color">Color</option>
+                  <option value="dimensions">Dimensions</option>
+                </select>
+              </div>
+              <div class="relative" style="height: 200px;">
+                <!-- SVG Scatter Plot -->
+                <svg class="w-full h-full" viewBox="0 0 300 200" style="overflow: visible;">
+                  <!-- Y-axis -->
+                  <line x1="50" y1="20" x2="50" y2="180" stroke="#888" stroke-width="1" />
+                  <text x="10" y="15" font-size="10" fill="#666">{{ getAxisLabel(scatterPlotYAxis) }}</text>
+                  <!-- Y-axis labels -->
+                  <template v-for="(tick, i) in yAxisTicks">
+                    <line
+                        :x1="48"
+                        :y1="180 - ((tick - yAxisMin) / (yAxisMax - yAxisMin)) * 160"
+                        :x2="52"
+                        :y2="180 - ((tick - yAxisMin) / (yAxisMax - yAxisMin)) * 160"
+                        stroke="#888"
+                        stroke-width="1"
+                    />
+                    <text
+                        :x="40"
+                        :y="185 - ((tick - yAxisMin) / (yAxisMax - yAxisMin)) * 160"
+                        text-anchor="end"
+                        font-size="10"
+                        fill="#666"
+                    >{{ formatTickLabel(tick, scatterPlotYAxis) }}</text>
+                  </template>
+
+                  <!-- X-axis -->
+                  <line x1="50" y1="180" x2="280" y2="180" stroke="#888" stroke-width="1" />
+                  <text x="290" y="180" font-size="10" fill="#666">Risk</text>
+                  <!-- X-axis labels -->
+                  <template v-for="tick in xAxisTicks">
+                    <line
+                        :x1="50 + (tick/100) * 230"
+                        :y1="178"
+                        :x2="50 + (tick/100) * 230"
+                        :y2="182"
+                        stroke="#888"
+                        stroke-width="1"
+                    />
+                    <text
+                        :x="50 + (tick/100) * 230"
+                        :y="195"
+                        text-anchor="middle"
+                        font-size="10"
+                        fill="#666"
+                    >{{ tick }}%</text>
+                  </template>
+
+                  <!-- Risk threshold vertical line -->
+                  <line
+                      :x1="50 + (riskThreshold * 230)"
+                      :y1="20"
+                      :x2="50 + (riskThreshold * 230)"
+                      :y2="180"
+                      stroke="#F59E0B"
+                      stroke-width="1"
+                      stroke-dasharray="4,2"
+                  />
+
+                  <!-- Plotted points - other lesions -->
+                  <circle
+                      v-for="lesion in lesionsWithRiskScore.filter(l => l.id !== selectedLesion?.id)"
+                      :key="lesion.id"
+                      :cx="50 + (lesion.risk_score * 230)"
+                      :cy="180 - ((lesion[scatterPlotYAxis] - yAxisMin) / (yAxisMax - yAxisMin)) * 160"
+                      r="3"
+                      fill="#9CA3AF"
+                      opacity="0.6"
+                  />
+
+                  <!-- Selected lesion point (highlighted) -->
+                  <circle
+                      v-if="selectedLesion && selectedLesion.risk_score >= 0 && selectedLesion[scatterPlotYAxis] != null"
+                      :cx="50 + (selectedLesion.risk_score * 230)"
+                      :cy="180 - ((selectedLesion[scatterPlotYAxis] - yAxisMin) / (yAxisMax - yAxisMin)) * 160"
+                      r="5"
+                      fill="#EF4444"
+                      stroke="#FEF2F2"
+                      stroke-width="1"
+                  />
+                </svg>
+                <div class="text-xs text-gray-500 mt-0 text-center">
+                  {{getAxisLabel(scatterPlotYAxis) }} vs. Risk Score (threshold: {{ Math.round(riskThreshold * 100) }}%)
+                </div>
+              </div>
+            </div>
 <!--            <div class="bg-white p-4 rounded shadow">-->
 <!--              <h3 class="font-medium mb-2">ABCD Analysis</h3>-->
 <!--              <div class="grid grid-cols-2 gap-2 text-sm">-->
@@ -490,6 +623,146 @@ export default {
   },
   setup() {
     // State
+
+// Add reactive state for scatter plot
+    const scatterPlotYAxis = ref('majorAxisMM'); // Default Y-axis property
+
+
+
+// Fixed X-axis values (0-100%)
+    const xAxisMin = computed(() => 0);
+    const xAxisMax = computed(() => 1);
+    const xAxisTicks = computed(() => [0, 25, 50, 75, 100]); // Fixed percentage ticks
+
+// Add these methods to your component's setup function
+// Function to get a user-friendly label for the axis
+    const getAxisLabel = (axisKey) => {
+      const labels = {
+        majorAxisMM: 'Major Axis (mm)',
+        minorAxisMM: 'Minor Axis (mm)',
+        areaMM2: 'Area (mm²)',
+        perimeterMM: 'Perimeter (mm)',
+        area_perim_ratio: 'Area/Perimeter Ratio',
+        eccentricity: 'Eccentricity',
+        symm_2axis: 'Symmetry (2 Axes)',
+        symm_2axis_angle: 'Symmetry Angle (°)',
+        norm_border: 'Normalized Border',
+        norm_color: 'Normalized Color',
+        color_std_mean: 'Color Std Mean',
+        radial_color_std_max: 'Radial Color Std Max',
+        A: 'A Value',
+        Aext: 'A Extended',
+        B: 'B Value',
+        Bext: 'B Extended',
+        C: 'C Value',
+        Cext: 'C Extended',
+        H: 'H Value',
+        Hext: 'H Extended',
+        L: 'L Value',
+        Lext: 'L Extended',
+        deltaA: 'Delta A',
+        deltaB: 'Delta B',
+        deltaL: 'Delta L',
+        deltaLB: 'Delta LB',
+        deltaLBnorm: 'Delta LB Norm',
+        stdL: 'Std L',
+        stdLExt: 'Std L Ext',
+        dnn_lesion_confidence: 'DNN Lesion Confidence (%)',
+        nevi_confidence: 'Nevi Confidence (%)',
+        asymmetry: 'Asymmetry',
+        border: 'Border',
+        color: 'Color',
+        dimensions: 'Dimensions'
+      };
+
+      return labels[axisKey] || axisKey;
+    };
+
+// Function to format tick label values based on axis type
+    const formatTickLabel = (tick, axisKey) => {
+      // Format percentage values
+      if (['asymmetry', 'border', 'color', 'dnn_lesion_confidence', 'nevi_confidence'].includes(axisKey)) {
+        return `${Math.round(tick)}%`;
+      }
+
+      // Format small decimal values with more precision
+      if (['deltaA', 'deltaB', 'deltaL', 'deltaLB', 'deltaLBnorm', 'norm_border', 'norm_color', 'symm_2axis'].includes(axisKey)) {
+        return tick.toFixed(2);
+      }
+
+      // Default formatting for most numeric values
+      return tick.toFixed(1);
+    };
+
+// Modified computed property for lesions with risk score
+    const lesionsWithRiskScore = computed(() => {
+      return lesions.value.filter(lesion =>
+          lesion.risk_score !== undefined &&
+          lesion.risk_score !== null &&
+          lesion.risk_score >= 0 &&
+          lesion[scatterPlotYAxis.value] !== undefined &&
+          lesion[scatterPlotYAxis.value] !== null
+      );
+    });
+
+// Compute Y-axis min, max and ticks (adaptive)
+    const yAxisData = computed(() => {
+      // Default to 0-10 range if no data available
+      if (lesionsWithRiskScore.value.length === 0) {
+        return { min: 0, max: 10 };
+      }
+
+      // Get all values for the selected attribute
+      const values = lesionsWithRiskScore.value.map(l => l[scatterPlotYAxis.value]);
+
+      // For percentage-type values, constrain to 0-100 range
+      if (['asymmetry', 'border', 'color', 'dnn_lesion_confidence', 'nevi_confidence'].includes(scatterPlotYAxis.value)) {
+        const min = Math.max(0, Math.floor(Math.min(...values)));
+        const max = Math.min(100, Math.ceil(Math.max(...values)));
+        return { min, max };
+      }
+
+      // For other values, use the data range
+      let min = Math.floor(Math.min(...values)); // Round down to nearest integer
+      let max = Math.ceil(Math.max(...values));  // Round up to nearest integer
+
+      // Add some padding (5%) to min/max for better visualization
+      const range = max - min;
+      if (range > 0) {
+        min = Math.max(0, min - range * 0.05);  // Don't go below 0 for most measurements
+        max = max + range * 0.05;
+      } else {
+        // If min == max (single value), add some padding
+        min = Math.max(0, min - 0.5);
+        max = max + 0.5;
+      }
+
+      return { min, max };
+    });
+
+    const yAxisMin = computed(() => yAxisData.value.min);
+    const yAxisMax = computed(() => yAxisData.value.max);
+
+    const yAxisTicks = computed(() => {
+      const min = yAxisMin.value;
+      const max = yAxisMax.value;
+      const range = max - min;
+
+      // For small ranges, use more detailed ticks
+      if (range <= 5) {
+        return Array.from({ length: 5 }, (_, i) => min + (range * i / 4));
+      }
+
+      // For percentage-type values, use standard ticks at 0, 25, 50, 75, 100
+      if (['asymmetry', 'border', 'color', 'dnn_lesion_confidence', 'nevi_confidence'].includes(scatterPlotYAxis.value)) {
+        return [0, 25, 50, 75, 100].filter(tick => tick >= min && tick <= max);
+      }
+
+      // Otherwise create 5 evenly spaced ticks
+      return Array.from({ length: 5 }, (_, i) => min + (range * i / 4));
+    });
+
+
     const lesions = ref([]);
     const riskThresholdValue = ref(50);
     const riskThreshold = computed(() => riskThresholdValue.value / 100);
@@ -1684,6 +1957,7 @@ export default {
       enlargedImage,
       isUploadModalOpen,
       canvasRef,
+      scatterPlotYAxis, // Add scatter plot axis selector
 
       // Analysis state
       isAnalysisModalOpen,
@@ -1692,9 +1966,9 @@ export default {
       analysisSteps,
       allowCloseAnalysisModal,
       isAnalysisCompleted,
-      currentLesion,      // New
-      totalLesions,       // New
-      currentLesionId,    // New
+      currentLesion,
+      totalLesions,
+      currentLesionId,
       startAnalysis,
       cancelAnalysis,
 
@@ -1703,6 +1977,17 @@ export default {
       // Computed
       highRiskLesions,
       visibleLesions,
+      lesionsWithRiskScore,
+
+      // Scatter plot computed properties
+      xAxisMin,
+      xAxisMax,
+      xAxisTicks,
+      yAxisMin,
+      yAxisMax,
+      yAxisTicks,
+      getAxisLabel,
+      formatTickLabel,
 
       // Methods
       handleLesionClick,
