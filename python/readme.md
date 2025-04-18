@@ -9,7 +9,7 @@ conda activate ScreenToolPC
 conda install pytorch==1.11.0 torchvision torchaudio cudatoolkit=11.3 -c pytorch -y
 
 # 安装基础依赖包
-conda install -y numpy=1.23.5 pandas=1.5.2 scikit-learn=1.2.0 pillow=9.1.1 tqdm=4.64.1
+conda install -y numpy=1.23.5 pandas=1.5.2 scikit-learn=1.2.0 tqdm=4.64.1
 
 # 安装Flask及相关依赖
 conda install -y flask flask-cors jinja2=3.1.2

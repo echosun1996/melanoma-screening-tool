@@ -88,7 +88,7 @@ options = {
             (timm_path, "timm"),
         ],
         # Windows特定选项
-        "zip_include_packages": ["*"],  # 将所有包都压缩到zip文件中
+        # 移除冲突的zip_include_packages设置
         "include_msvcr": True,  # 包含MSVC运行时
         # 提供替代的依赖解决方案
         "constants": {

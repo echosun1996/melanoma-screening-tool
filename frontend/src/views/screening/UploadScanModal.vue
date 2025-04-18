@@ -512,8 +512,8 @@ export default {
     const isLoading = ref(false);
 
     // Step 1: Base path selection
-    // const basePath = ref('\\\\NAHWB360CAPT01\\AHWB360CAPT01-DermaGraphix-IMG\\');
-    const basePath = ref('/Users/echosun/TBP vectra cases');
+    const basePath = ref('\\\\NAHWB360CAPT01\\AHWB360CAPT01-DermaGraphix-IMG\\');
+    // const basePath = ref('/Users/echosun/TBP vectra cases');
 
     // Step 2: Patient folder selection
     const searchQuery = ref('');
