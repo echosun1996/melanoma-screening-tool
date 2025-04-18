@@ -17,7 +17,7 @@ function preload(): void {
   autoUpdaterService.create();
 
   // Python server
-  // crossService.createPythonServer();
+  crossService.createPythonServer();
 
   // init sqlite db
   // sqlitedbService.init();

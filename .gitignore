@@ -21,3 +21,6 @@ python/dist/
 *DS_Store
 yalc.lock
 public/*
+/frontend/dist/models/
+/python/checkpoint/
+/build/extraResources/py/
